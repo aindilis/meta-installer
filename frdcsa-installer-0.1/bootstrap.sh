@@ -8,14 +8,12 @@ export PRIVATE_INSTALL=false
 export INSTALL_TO_VAGRANT=false
 export INSTALL_TO_HOST=true
 
-export INSTALLER_VERSION=0.1
-
 if $INSTALL_TO_VAGRANT == true; then
     export USER="vagrant"
     export DATA_DIR="/vagrant/data"
 elif $INSTALL_TO_HOST == true; then
     export USER="andrewdo"
-    export DATA_DIR="/home/$USER/frdcsa-installer-$INSTALL_VERSION/data"
+    export DATA_DIR="/home/$USER/frdcsa-installer/data"
     if ! [ -d "/home/$USER" ]; then
 	adduser $USER
     fi
@@ -269,22 +267,34 @@ cd /var/lib/myfrdcsa/codebases/minor/spse
 /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Cal::DAV
 /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Net::Google::Calendar
 
-if ! $PRIVATE_INSTALL; then
+cd /var/lib/myfrdcsa/codebases/minor/spse/kbs
+/var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -c Org::PICForm::PIC::Vis::Metadata fast-import metadata.kbs
 
+if ! $PRIVATE_INSTALL; then
     cd /var/lib/myfrdcsa/codebases/minor/spse/kbs
     /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import do2.kbs
-    /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -c Org::PICForm::PIC::Vis::Metadata fast-import metadata.kbs
 fi
 
 
-
-# ### if private
-# ### scp -r 192.168.1.200:.config/frdcsa .
+if $PRIVATE_INSTALL; then
+    cd /home/$USER
+    mkdir .config
+    cd .config
+    su $USER -c "git clone ssh://andrewdo@192.168.1.220/gitroot/frdcsa-private"
+    ln -s frdcsa-private frdcsa
+elif
+    cd /home/$USER
+    mkdir .config
+    cd .config
+    su $USER -c "git clone ssh://andrewdo@192.168.1.220/gitroot/frdcsa-public"
+    ln -s frdcsa-public frdcsa
+fi
 
 # @ /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies ./spse2
 
 # # if the environment is 64 bit, do 
-# @ sudo dpkg --add-architecture ia32
+
+    sudo dpkg --add-architecture ia32
 
 
 
@@ -328,9 +338,9 @@ fi
 # # copy ?the?
 # # add frdcsa-applet to the startup applications
 
-# mkdir -p ~/.config/frdcsa/frdcsa-applet
-# mkdir -p ~/.config/frdcsa/spse2
-# cp /var/lib/myfrdcsa/codebases/minor/spse/spse2.conf  ~/.config/frdcsa/spse2
+# # mkdir -p ~/.config/frdcsa/frdcsa-applet
+# # mkdir -p ~/.config/frdcsa/spse2
+# # cp /var/lib/myfrdcsa/codebases/minor/spse/spse2.conf  ~/.config/frdcsa/spse2
 
 # # # test
 # # sudo /etc/init.d/unilang start

@@ -50,8 +50,5 @@ Please generate an id_rsa and an id_rsa.pub for use with the Vagrant
 machine.  And place them in the data dir, so the bootstrap script can
 install them, and secure the vagrant VM.
 
-You should also probably put some kind of key into the file
-data/frdcsa_git_id_rsa in order for it to access the git repository.
-
 More later.
 
