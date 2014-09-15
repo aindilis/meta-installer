@@ -109,9 +109,17 @@ fi
 if [ ! -d "/var/lib/myfrdcsa/codebases/releases" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/releases"
 fi
+if [ ! -d "/var/lib/myfrdcsa/codebases/releases" ]; then
+    echo "ERROR: Didn't check out /var/lib/myfrdcsa/codebases/releases"
+    exit 1
+fi
 
 if [ ! -d "/var/lib/myfrdcsa/codebases/minor" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/minor"
+fi
+if [ ! -d "/var/lib/myfrdcsa/codebases/minor" ]; then
+    echo "ERROR: Didn't check out /var/lib/myfrdcsa/codebases/minor"
+    exit 1
 fi
 
 cd /home/$USER
@@ -119,10 +127,19 @@ cd /home/$USER
 if [ ! -d "/home/$USER/.myconfig" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/.myconfig"
 fi
+if [ ! -d "/home/$USER/.myconfig" ]; then
+    echo "ERROR: Didn't check out /home/$USER/.myconfig"
+    exit 1
+fi
+
 
 if ! grep myfrdcsa .bashrc; then
     mv /home/$USER/.emacs.d /home/$USER/.emacs.d.old
     su $USER -c "/home/$USER/.myconfig/bin/install-myconfig.pl"
+fi
+if ! grep myfrdcsa .bashrc; then
+    echo "ERROR: Didn't install /home/$USER/.myconfig correctly"
+    exit 1
 fi
 
 if [ ! -d "/var/lib/myfrdcsa/codebases/internal" ]; then
@@ -130,8 +147,6 @@ if [ ! -d "/var/lib/myfrdcsa/codebases/internal" ]; then
     su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/internal/"
     su $USER -c "/var/lib/myfrdcsa/codebases/releases/myfrdcsa-0.1/myfrdcsa-0.1/scripts/gen-internal-links.pl"
 fi
-
-# verify creation
 if [ ! -h "/var/lib/myfrdcsa/codebases/internal/myfrdcsa" ]; then
     echo "ERROR: gen internal links failed, exiting."
     exit 1
@@ -140,7 +155,10 @@ fi
 if [ ! -h "/usr/share/perl5/MyFRDCSA" ]; then
     /var/lib/myfrdcsa/codebases/internal/myfrdcsa/scripts/gen-perl-links.pl
 fi
-
+if [ ! -h "/usr/share/perl5/MyFRDCSA" ]; then
+    echo "ERROR: gen perl links failed, exiting."
+    exit 1
+fi
 
 if [ ! -x "/root/.cpan" ]; then
     # setup CPAN
@@ -151,6 +169,10 @@ if [ ! -x "/root/.cpan" ]; then
     export PERL_MM_USE_DEFAULT=1
     cpan -J
 fi
+if [ ! -x "/root/.cpan" ]; then
+    echo "ERROR: didn't configure CPAN."
+    exit 1
+fi
 
 if [ ! -d "/var/lib/myfrdcsa/codebases/data/" ]; then
 
@@ -160,25 +182,45 @@ if [ ! -d "/var/lib/myfrdcsa/codebases/data/" ]; then
 
     su $USER -c "/var/lib/myfrdcsa/codebases/internal/myfrdcsa/scripts/gen-data-dirs.pl"
 fi
+if [ ! -d "/var/lib/myfrdcsa/codebases/data/" ]; then
+    echo "ERROR: gen data dirs failed, exiting."
+    exit 1
+fi
 
 if $PRIVATE_INSTALL; then
-    cd /home/$USER
-    mkdir .config
-    cd .config
-    su $USER -c "git clone ssh://andrewdo@192.168.1.220/gitroot/frdcsa-private"
-    ln -s frdcsa-private frdcsa
+    if [ ! -h /home/$USER/.config/frdcsa ]; then
+	cd /home/$USER
+	mkdir .config
+	cd .config
+	su $USER -c "git clone ssh://andrewdo@192.168.1.220/gitroot/frdcsa-private"
+	ln -s frdcsa-private frdcsa
+    fi
+    if [ ! -h /home/$USER/.config/frdcsa ]; then
+	echo "ERROR: didn't checkout /home/$USER/.config/frdcsa properly, exiting."
+	exit 1
+    fi
 elif
-    cd /home/$USER
-    mkdir .config
-    cd .config
-    su $USER -c "git clone ssh://andrewdo@posi.frdcsa.org/gitroot/frdcsa-public"
-    ln -s frdcsa-public frdcsa
+    if [ ! -h /home/$USER/.config/frdcsa ]; then
+	cd /home/$USER
+	mkdir .config
+	cd .config
+	su $USER -c "git clone ssh://andrewdo@posi.frdcsa.org/gitroot/frdcsa-public"
+	ln -s frdcsa-public frdcsa
+    fi
+    if [ ! -h /home/$USER/.config/frdcsa ]; then
+	echo "ERROR: didn't checkout /home/$USER/.config/frdcsa properly, exiting."
+	exit 1
+    fi
 fi
 
 cd /var/lib/myfrdcsa/codebases/internal/kbfs/data
 
 if [ ! -d "/var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups" ]; then
     su $USER -c "mkdir /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups"
+fi
+if [ ! -d "/var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups" ]; then
+    echo "ERROR: didn't make /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups properly, exiting."
+    exit 1
 fi
 
 cd /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups
