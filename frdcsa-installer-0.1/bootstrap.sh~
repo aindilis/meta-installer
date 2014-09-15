@@ -10,11 +10,9 @@ export INSTALL_TO_HOST=true
 
 if $INSTALL_TO_VAGRANT == true; then
     export USER="vagrant"
-    export GROUP="vagrant"
     export DATA_DIR="/vagrant/data"
 elif $INSTALL_TO_HOST == true; then
     export USER="andrewdo"
-    export GROUP="andrewdo"
     export DATA_DIR="/home/$USER/frdcsa-installer/data"
     if ! [ -d "/home/$USER" ]; then
 	adduser $USER
@@ -54,7 +52,7 @@ if ! dpkg -l | grep -q mysql-server; then
 	mkdir -p /etc/myfrdcsa/config/
 	    # FIXME have it write the mysql password to /etc/myfrdcsa/config/perllib
 	apg -n 1 -m 16 > /etc/myfrdcsa/config/perllib
-	chown $USER.$GROUP /etc/myfrdcsa/config/perllib
+	chown $USER.$USER /etc/myfrdcsa/config/perllib
 	chmod 600 /etc/myfrdcsa/config/perllib
     fi
 
@@ -74,16 +72,16 @@ fi
 
 if ! [ -d "/var/lib/myfrdcsa/codebases" ]; then
     mkdir -p /var/lib/myfrdcsa/codebases
-    chown -R $USER.$GROUP /var/lib/myfrdcsa
+    chown -R $USER.$USER /var/lib/myfrdcsa
 fi
 
 cd /var/lib/myfrdcsa/codebases
 
 if ! grep -q "Host posi.frdcsa.org" /home/$USER/.ssh/config; then
     echo -e "Host posi.frdcsa.org\n\tStrictHostKeyChecking no\n" >> /home/$USER/.ssh/config
-    chown $USER.$GROUP /home/$USER/.ssh/authorized_keys /home/$USER/.ssh/id_rsa /home/$USER/.ssh/config
+    chown $USER.$USER /home/$USER/.ssh/authorized_keys /home/$USER/.ssh/id_rsa /home/$USER/.ssh/config
     cp $DATA_DIR/frdcsa_git_id_rsa /home/$USER/.ssh/id_rsa
-    chown $USER.$GROUP /home/$USER/.ssh/id_rsa
+    chown $USER.$USER /home/$USER/.ssh/id_rsa
 fi
 
 if ! [ -d "/var/lib/myfrdcsa/codebases/releases" ]; then
@@ -141,19 +139,10 @@ if ! [ -d "/var/lib/myfrdcsa/codebases/data/" ]; then
     su $USER -c "/var/lib/myfrdcsa/codebases/internal/myfrdcsa/scripts/gen-data-dirs.pl"
 fi
 
-if $PRIVATE_INSTALL; then
-    cd /home/$USER
-    mkdir .config
-    cd .config
-    su $USER -c "git clone ssh://andrewdo@192.168.1.220/gitroot/frdcsa-private"
-    ln -s frdcsa-private frdcsa
-elif
-    cd /home/$USER
-    mkdir .config
-    cd .config
-    su $USER -c "git clone ssh://andrewdo@posi.frdcsa.org/gitroot/frdcsa-public"
-    ln -s frdcsa-public frdcsa
-fi
+# if ! [ -d "/home/$USER/.config/frdcsa/" ]; then
+#     su $USER -c "mkdir -p /home/$USER/.config/frdcsa/"
+#     # have it write the mysql
+# fi
 
 cd /var/lib/myfrdcsa/codebases/internal/kbfs/data
 
@@ -190,7 +179,7 @@ if ! [ -d "$DATA_DIR/frdcsa-misc" ]; then
 fi
 
 FILE_STAT_INSTALLED=`perldoc -l File::Signature`
-if [ $FILE_STAT_INSTALLED == "" || ! [ -f $FILE_STAT_INSTALLED ]; then
+if $FILE_STAT_INSTALLED == "" || ! [ -f $FILE_STAT_INSTALLED ]; then
     # DONE: FIXME: manually install File::Stat
     cd /tmp && tar xzf $DATA_DIR/frdcsa-misc/File-Stat-0.01.tar.gz 
     cd File-Stat-0.01/
@@ -251,11 +240,12 @@ if true; then
     # do something about having to constantly close the GUI to get
     # this to work, add some kill switch inside or preinstall the
     # modules.
-    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W"
+    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "spse2 -c Org::FRDCSA::Verber::PSEx2::Do"
 fi
 
+# FIXME: not installing properly
 FILE_SIGNATURE_INSTALLED=`perldoc -l File::Signature`
-if [ $FILE_SIGNATURE_INSTALLED == "" ] || ! [ -f $FILE_SIGNATURE_INSTALLED ]; then
+if $FILE_SIGNATURE_INSTALLED == "" || ! [ -f $FILE_SIGNATURE_INSTALLED ]; then
     cpanm -f File::Signature
 fi
 
@@ -280,95 +270,113 @@ cd /var/lib/myfrdcsa/codebases/minor/spse
 cd /var/lib/myfrdcsa/codebases/minor/spse/kbs
 /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -c Org::PICForm::PIC::Vis::Metadata fast-import metadata.kbs
 
-if [ ! $PRIVATE_INSTALL ]; then
+if ! $PRIVATE_INSTALL; then
     cd /var/lib/myfrdcsa/codebases/minor/spse/kbs
     /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import do2.kbs
 fi
 
-if [ $ARCH == "x86_64" ]; then
-    # dpkg --add-architecture ia32
-    dpkg --add-architecture i386
+
+if $PRIVATE_INSTALL; then
+    cd /home/$USER
+    mkdir .config
+    cd .config
+    su $USER -c "git clone ssh://andrewdo@192.168.1.220/gitroot/frdcsa-private"
+    ln -s frdcsa-private frdcsa
+elif
+    cd /home/$USER
+    mkdir .config
+    cd .config
+    su $USER -c "git clone ssh://andrewdo@192.168.1.220/gitroot/frdcsa-public"
+    ln -s frdcsa-public frdcsa
 fi
+
+# @ /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies ./spse2
+
+# # if the environment is 64 bit, do 
+
+    sudo dpkg --add-architecture ia32
+
+
+
 
 # # get FRDCSA Applet working
 
-if ! [ -f "/var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/data/scater.gif" ]; then
-    # scp -r andrewdo@justin.frdcsa.org:/var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/data .
-    # su $USER -c "mkdir /var/lib/myfrdcsa/sandbox/opencyc-4.0"
-    cd /var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/data/
-    su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/frdcsa-dashboard/data/* ."
-fi
+# @ pushd /var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/data
+# @ scp -r andrewdo@justin.frdcsa.org:/var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/data .
+# @ mv data/* .
+# @ rmdir data
 
-cd /var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/
-/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./frdcsa-applet -W"
+# @ pushd /var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/xo
+# @ /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./frdcsa-applet"
 
-# put the stuff in /etc/init.d
-# @ (frdcsa-applet &) <- as of Sun Sep 14 21:58:06 CDT 2014, not sure what this is about
+# # put the stuff in /etc/init.d
+# @ (frdcsa-applet &)
 
-# for corpus
 
-if ! [ -d "/var/lib/myfrdcsa/sandbox/meteor-0.6" ]; then
-    su $USER -c "mkdir /var/lib/myfrdcsa/sandbox/meteor-0.6"
-    cd /var/lib/myfrdcsa/sandbox/meteor-0.6
-    su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/meteor-0.6 ."
-fi
+
+# # scp -r 192.168.1.200:.config/frdcsa .
+
+# # for corpus
+# rsync -av justin.frdcsa.org:/var/lib/myfrdcsa/sandbox/meteor-0.6/ /var/lib/myfrdcsa/sandbox/meteor-0.6/
+
+# ################## continue later
+
+
+
+
+
+
 
 # # fix the username for this file, or fix the whole concept
 
-if [ ! -f "/etc/init.d/unilang" ]; then
-    cat /var/lib/myfrdcsa/codebases/internal/unilang/systems/etc/init.d/unilang | perl -pe "s/<USERNAME>/$USER/sg" > /etc/init.d/unilang
-    sudo chmod 755 /etc/init.d/unilang 
-    sudo update-rc.d unilang defaults
-fi
+# # # sudo apt-get install super
 
-# copy ?the?
-# add frdcsa-applet to the startup applications
+# sudo cp /var/lib/myfrdcsa/codebases/internal/unilang/systems/etc/init.d/unilang /etc/init.d
+# sudo chmod 755 /etc/init.d/unilang 
+# sudo update-rc.d unilang defaults
 
-/etc/init.d/unilang restart
+# # copy ?the?
+# # add frdcsa-applet to the startup applications
 
-# FIXME: run unilang tests and report on success
+# # mkdir -p ~/.config/frdcsa/frdcsa-applet
+# # mkdir -p ~/.config/frdcsa/spse2
+# # cp /var/lib/myfrdcsa/codebases/minor/spse/spse2.conf  ~/.config/frdcsa/spse2
 
-# # # sudo shutdown -r now
+# # # test
+# # sudo /etc/init.d/unilang start
 
-cd /var/lib/myfrdcsa/
-mkdir datasets
-chown $USER.$GROUP datasets
+# # # # sudo shutdown -r now
 
-# for workhorse
-sudo apt-get install -y liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en
+# pushd /var/lib/myfrdcsa/
+# sudo mkdir datasets
+# sudo chown andrewdo.andrewdo datasets
 
-if [ ! -d "/var/lib/myfrdcsa/codebases/minor/corpus-manager/data/corpora/gutenberg" ]; then
-    su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/minor/corpus-manager/data/corpora/gutenberg"
 
-fi
+# # for workhorse
+# @ mkdir -p /var/lib/myfrdcsa/codebases/minor/corpus-manager/data/corpora/gutenberg
+# @ pushd /var/lib/myfrdcsa/codebases/minor/workhorse/scripts
+# @ chmod +x ./process-corpus.pl
+# @ sudo apt-get install liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en
+# # @ sudo ln -s /usr/include/link-grammar/ /usr/local/include
+# @ sudo cp -ar /usr/include/link-grammar/ /usr/local/include
 
-if [ ! -d "/usr/local/include/link-grammar" ]; then
-    cp -ar /usr/include/link-grammar/ /usr/local/include
-fi
+# @ sudo chown andrewdo.andrewdo /var/lib/myfrdcsa
+# @ mkdir /var/lib/myfrdcsa/sandbox
+# @ mkdir /var/lib/myfrdcsa/codebases/external
+# @ scp -r justin.frdcsa.org:/var/lib/myfrdcsa/sandbox/termex-1.49 /var/lib/myfrdcsa/sandbox
+# @ pushd /var/lib/myfrdcsa/sandbox/termex-1.49/termex-1.49
+# @ perl Makefile.PL
+# @ sudo make install
 
-if [ ! -d "/var/lib/myfrdcsa/codebases/external" ]; then
-    su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/external"
-fi
+# # @ pushd /var/lib/myfrdcsa/codebases/minor/paperless-office && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies ./paperless-office
 
-if [ ! -d "/var/lib/myfrdcsa/sandbox/termex-1.49" ]; then
-    su $USER -c "mkdir -p /var/lib/myfrdcsa/sandbox/termex-1.49"
-    su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/termex-1.49 /var/lib/myfrdcsa/sandbox/termex-1.49/"
-    cd /var/lib/myfrdcsa/sandbox/termex-1.49/termex-1.49
-    perl Makefile.PL
-    make install
-fi
+# popd
 
-cd /var/lib/myfrdcsa/codebases/minor/paperless-office
+# @ /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Module::Build
+# @ /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WWW::Mechanize::Cached
+# @ /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Yahoo::Search
 
-# FIXME: do we need to add a cabinet here?
-/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./paperless-office -W"
-
-/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Module::Build
-/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WWW::Mechanize::Cached
-/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Yahoo::Search
-
-cd /var/lib/myfrdcsa/codebases/minor/workhorse/scripts/
-/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./process-corpus.pl -W"
+# /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies ./process-corpus.pl
 
 # @ /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Archive::Zip
 
