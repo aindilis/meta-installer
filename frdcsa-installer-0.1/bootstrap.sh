@@ -294,8 +294,7 @@ if ! echo show databases | mysql -u root --password="$TEMP_IDENTIFIER" | grep un
     exit 1
 fi
 
-
-if [ ! -d "$DATA_DIR/frdcsa-misc" ]; then
+if [ ! -d "$DATA_DIR/frdcsa-misc/etc" ]; then
     cd $DATA_DIR
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/frdcsa-misc"
 else
@@ -305,15 +304,25 @@ else
 	popd
     fi
 fi
-if [ ! -d "$DATA_DIR/frdcsa-misc" ]; then
+if [ ! -d "$DATA_DIR/frdcsa-misc/etc" ]; then
     echo "ERROR: didn't checkout frdcsa-misc properly"
     exit 1
 fi
 
+export TMP_PERL_MM_OPT=$PERL_MM_OPT
+export PERL_MM_OPT=
 
-# FILE_STAT_INSTALLED=`perldoc -l File::Signature`
-# if [ $FILE_STAT_INSTALLED == "" || ! [ -f $FILE_STAT_INSTALLED ]; then
 if ! perldoc -l File::Signature; then
+    cpanm -f File::Signature
+fi
+if ! perldoc -l File::Signature; then
+    echo "ERROR: didn't install File::Signature correctly"
+    exit 1
+fi
+
+export PERL_MM_OPT=$TMP_PERL_MM_OPT
+
+if ! perldoc -l File::Stat; then
     # DONE: FIXME: manually install File::Stat
     cd /tmp && tar xzf $DATA_DIR/frdcsa-misc/File-Stat-0.01.tar.gz 
     cd File-Stat-0.01/
@@ -321,8 +330,8 @@ if ! perldoc -l File::Signature; then
     make
     make install
 fi
-if ! perldoc -l File::Signature; then
-    echo "ERROR: didn't install File::Signature correctly"
+if ! perldoc -l File::Stat; then
+    echo "ERROR: didn't install File::Stat correctly"
     exit 1
 fi
 
@@ -420,10 +429,10 @@ fi
 export TMP_PERL_MM_OPT=$PERL_MM_OPT
 export PERL_MM_OPT=
 
-FILE_SIGNATURE_INSTALLED=`perldoc -l File::Signature`
-if [ $FILE_SIGNATURE_INSTALLED == "" ] || [ ! -f $FILE_SIGNATURE_INSTALLED ]; then
-    cpanm -f File::Signature
-fi
+# FILE_SIGNATURE_INSTALLED=`perldoc -l File::Signature`
+# if [ $FILE_SIGNATURE_INSTALLED == "" ] || [ ! -f $FILE_SIGNATURE_INSTALLED ]; then
+#     cpanm -f File::Signature
+# fi
 
 AI_PROLOG_INSTALLED=`perldoc -l AI::Prolog`
 if [ $AI_PROLOG_INSTALLED == "" ] || [ ! -f $AI_PROLOG_INSTALLED ]; then
