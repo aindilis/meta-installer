@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 export NONINTERACTIVE=true
+export PERL_MM_USE_DEFAULT=1
+
 export PRIVATE_INSTALL=false
 export UPDATE_REPOS=0
 
@@ -189,11 +191,8 @@ fi
 
 if [ ! -x "/root/.cpan" ]; then
     # setup CPAN
-
     # have it configure it by default
-
     # FIXME: switch to cpanm
-    export PERL_MM_USE_DEFAULT=1
     cpan -J
 fi
 if [ ! -x "/root/.cpan" ]; then
@@ -202,11 +201,8 @@ if [ ! -x "/root/.cpan" ]; then
 fi
 
 if [ ! -d "/var/lib/myfrdcsa/codebases/data/" ]; then
-
     su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/data/"
-
     # create all the data dirs as required
-
     su $USER -c "/var/lib/myfrdcsa/codebases/internal/myfrdcsa/scripts/gen-data-dirs.pl"
 fi
 if [ ! -d "/var/lib/myfrdcsa/codebases/data/" ]; then
@@ -315,12 +311,13 @@ export PERL_MM_OPT=
 if ! perldoc -l File::Signature; then
     cpanm -f File::Signature
 fi
+
+export PERL_MM_OPT=$TMP_PERL_MM_OPT
+
 if ! perldoc -l File::Signature; then
     echo "ERROR: didn't install File::Signature correctly"
     exit 1
 fi
-
-export PERL_MM_OPT=$TMP_PERL_MM_OPT
 
 if ! perldoc -l File::Stat; then
     # DONE: FIXME: manually install File::Stat
@@ -335,56 +332,25 @@ if ! perldoc -l File::Stat; then
     exit 1
 fi
 
+/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/unilang/start -s -u localhost 9000 -c -W"
+/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/unilang/scripts/web-services/server -u -t XMLRPC -W"
+/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/manager/manager -u --scheduler -W"
+/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/minor/spse/spse2 -l -W"
+
+# update this patch to work with the latest version of Tk::GraphViz
+# FIXME: copy the modified patch to the gitroot, along with other modifications
+cd /usr/local/share/perl
+if ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
+    patch -p0 -i -R /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
+fi
+if ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
+    echo "ERROR: couldn't patch Tk::GraphViz"
+    exit 1
+fi
+
 echo "Finishing for now";
 exit 1
 
-
-
-
-
-
-
-#########################################################################################
-
-if false; then
-
-
-
-    ################################
-    # FIXME FIXME FIXME FIXME FIXME
-    ################################
-
-
-    # need to add -W flag to all these programs
-
-
-    # also need to have it pull repositories that already exist on the
-    # system, to make sure they are up to date.
-
-
-    ################################
-    # FIXME FIXME FIXME FIXME FIXME
-    ################################
-
-
-
-
-
-    # FIXME: alter install-script-dependencies run apt-get with -y etc when run with NONINTERACTIVE=true
-    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/unilang/start -s -u localhost 9000 -c -W"
-    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/unilang/scripts/web-services/server -u -t XMLRPC -W"
-    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/manager/manager -u --scheduler -W"
-
-    cd /var/lib/myfrdcsa/codebases/minor/spse
-    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./spse2 -l -W"
-
-    cd /usr/local/share/perl
-
-    # update this patch to work with the latest version of Tk::GraphViz
-
-    # FIXME: copy the modified patch to the gitroot, along with other modifications
-    sudo patch -p0 -i /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
-fi
 
 if ! [ -d "/var/lib/myfrdcsa/codebases/data/freekbs2/theorem-provers" ]; then
     # scp -r andrewdo@justin.frdcsa.org:/var/lib/myfrdcsa/codebases/data/freekbs2/theorem-provers .
@@ -429,17 +395,18 @@ fi
 export TMP_PERL_MM_OPT=$PERL_MM_OPT
 export PERL_MM_OPT=
 
-# FILE_SIGNATURE_INSTALLED=`perldoc -l File::Signature`
-# if [ $FILE_SIGNATURE_INSTALLED == "" ] || [ ! -f $FILE_SIGNATURE_INSTALLED ]; then
-#     cpanm -f File::Signature
-# fi
-
-AI_PROLOG_INSTALLED=`perldoc -l AI::Prolog`
-if [ $AI_PROLOG_INSTALLED == "" ] || [ ! -f $AI_PROLOG_INSTALLED ]; then
+if ! perldoc -l AI::Prolog; then
     cpanm --force AI::Prolog
 fi
 
 export PERL_MM_OPT=$TMP_PERL_MM_OPT
+
+if ! perldoc -l AI::Prolog; then
+    echo "ERROR: AI::Prolog did not install"
+    exit 1
+fi
+
+
 
 
 if true; then
