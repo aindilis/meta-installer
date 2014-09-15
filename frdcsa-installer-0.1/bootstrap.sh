@@ -44,7 +44,7 @@ if ! dpkg -l | grep -q mysql-server; then
 
     # FIXME: add something here to abort installation if it detects that it will remove any packages
     
-    apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl
+    apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file
 
     # http://stackoverflow.com/questions/1202347/how-can-i-pass-a-password-from-a-bash-script-to-aptitude-for-installing-mysql
 
@@ -229,7 +229,6 @@ if ! [ -d "/var/lib/myfrdcsa/sandbox" ]; then
 fi
 
 if ! [ -d "/var/lib/myfrdcsa/sandbox/opencyc-4.0/opencyc-4.0" ]; then
-    # scp -r andrewdo@justin.frdcsa.org:/var/lib/myfrdcsa/codebases/data/freekbs2/theorem-provers .
     su $USER -c "mkdir /var/lib/myfrdcsa/sandbox/opencyc-4.0"
     cd /var/lib/myfrdcsa/sandbox/opencyc-4.0
     su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/opencyc-4.0 ."
@@ -260,7 +259,8 @@ if [ $FILE_SIGNATURE_INSTALLED == "" ] || ! [ -f $FILE_SIGNATURE_INSTALLED ]; th
 fi
 
 if true; then
-    cd /var/lib/myfrdcsa/codebases/internal/boss && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies boss
+    cd /var/lib/myfrdcsa/codebases/internal/boss && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies ./boss
+    su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/internal/boss/data/namazu"
     boss etags
 fi
 
@@ -335,7 +335,7 @@ mkdir datasets
 chown $USER.$GROUP datasets
 
 # for workhorse
-sudo apt-get install -y liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en
+sudo apt-get install -y liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils
 
 if [ ! -d "/var/lib/myfrdcsa/codebases/minor/corpus-manager/data/corpora/gutenberg" ]; then
     su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/minor/corpus-manager/data/corpora/gutenberg"
@@ -370,19 +370,15 @@ cd /var/lib/myfrdcsa/codebases/minor/paperless-office
 cd /var/lib/myfrdcsa/codebases/minor/workhorse/scripts/
 /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./process-corpus.pl -W"
 
-# @ /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Archive::Zip
+/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Archive::Zip
+cd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation
+/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./process-2.pl -W"
 
-# pushd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation
-# /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies ./process-2.pl 
+sudo apt-get install -y wordnet wordnet-base wordnet-gui libwordnet-querydata-perl
+# /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WordNet::QueryData
 
-# sudo apt-get install wordnet wordnet-base wordnet-gui libwordnet-querydata-perl
-# # install-cpan-modules WordNet::QueryData
-# pushd /var/lib/myfrdcsa/codebases/internal/corpus
-# /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies './corpus -h'
-
-# mysql
-# > create database sayer_nlu;
-# > create database sayer_nlu_textanalysis;
+cd /var/lib/myfrdcsa/codebases/internal/corpus
+/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies './corpus -h'
 
 # # now need to copy over all files related to getting various
 # # textanalysis items working, such as montylingua, etc
@@ -393,55 +389,21 @@ cd /var/lib/myfrdcsa/codebases/minor/workhorse/scripts/
 # # the database copying and installation
 # # the installation of SPSE2-related perl modules
 
+# cd /var/lib/myfrdcsa/codebases/internal/verber/data
+# scp -r andrewdo@justin.frdcsa.org:/var/lib/myfrdcsa/codebases/internal/verber/data/ .
 
 
+# generally useful but optional
+apt-file update
 
-# @ pushd /var/lib/myfrdcsa/codebases/internal/verber/data
-# @ scp -r andrewdo@justin.frdcsa.org:/var/lib/myfrdcsa/codebases/internal/verber/data/ .
-
-
-# # to get 'boss search' working
-
-# namazu2 namazu2-index-tools
-
-
-# # generally useful but optional
-# sudo apt-get install apt-file
-
-
-# # for clear
+# for clear
 if ! [ -d "/etc/clear" ]; then
     cd /etc
     cp -ar $DATA_DIR/frdcsa-misc/etc/clear .
 fi
 apt-get install -y festival
-cd /var/lib/myfrdcsa/codebases/internal/clear && install-script-dependencies "cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf"
+cd /var/lib/myfrdcsa/codebases/internal/clear && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W"
 
-# cd /var/lib/myfrdcsa/codebases/internal/clear && install-script-dependencies "cla -r <INSERTPDFFILEHERE>"
-# sudo apt-get install festival
-# sudo scp -r justin.frdcsa.org:/etc/clear /etc
-
-
-
-
-
-
-
-
-
-
-
-
-# # for workhorse
-
-# sudo apt-get install libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils
-
-
-# # as of 20130422
-
-# mkdir /var/lib/myfrdcsa/codebases/internal/boss/data/namazu
-
-# # to get academician
-
-# # verber
-# # install-script-dependencies /var/lib/myfrdcsa/codebases/internal/verber
+# get academician
+# verber
+# install-script-dependencies /var/lib/myfrdcsa/codebases/internal/verber
