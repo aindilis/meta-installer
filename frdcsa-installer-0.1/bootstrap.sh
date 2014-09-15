@@ -5,8 +5,8 @@ export PRIVATE_INSTALL=false
 
 # FIXME: make the installer idempotent
 
-export INSTALL_TO_VAGRANT=false
-export INSTALL_TO_HOST=true
+export INSTALL_TO_VAGRANT=true
+export INSTALL_TO_HOST=false
 
 if $INSTALL_TO_VAGRANT == true; then
     export USER="vagrant"
@@ -25,21 +25,27 @@ fi
 # setup a secure .ssh environment
 
 if $INSTALL_TO_VAGRANT == true; then
-    mv /home/vagrant/.ssh /home/vagrant/.ssh.old
-    mkdir -p /home/vagrant/.ssh
-    chmod 700 /home/vagrant/.ssh
-    chown -R vagrant.vagrant /home/vagrant/.ssh
+    if [ ! -d /home/vagrant/.ssh.old ]; then
+	mv /home/vagrant/.ssh /home/vagrant/.ssh.old
+	mkdir -p /home/vagrant/.ssh
+	chmod 700 /home/vagrant/.ssh
+	chown -R vagrant.vagrant /home/vagrant/.ssh
+    fi
 elif $INSTALL_TO_HOST == true; then
     echo nothing to do for now
 fi
 
-	# setup a proper sources.list
+# setup a proper sources.list
 if $INSTALL_TO_VAGRANT == true; then
-    cp $DATA_DIR/sources.list /etc/apt
-    cat $DATA_DIR/id_rsa.pub >> /home/$USER/.ssh/authorized_keys
+    # cp $DATA_DIR/sources.list /etc/apt
+
+    # FIXME: add something here to make it idempotent
+    if ! grep -q 'andrewdo@justin' /home/$USER/.ssh/authorized_keys; then
+	cat $DATA_DIR/id_rsa.pub >> /home/$USER/.ssh/authorized_keys
+    fi
 fi
 
-if ! dpkg -l | grep -q mysql-server; then
+if ! dpkg -l | grep -E 'mysql-server-[0-9]+' | grep -q '^ii'; then
     apt-get update
 
     # FIXME: add something here to abort installation if it detects that it will remove any packages
@@ -50,29 +56,42 @@ if ! dpkg -l | grep -q mysql-server; then
 
     # emacs install twittering-mode, ert
 
-    if ! [ -x "/etc/myfrdcsa/config/perllib" ]; then
+    if [ ! -x "/etc/myfrdcsa/config/perllib" ]; then
 	mkdir -p /etc/myfrdcsa/config/
-	    # FIXME have it write the mysql password to /etc/myfrdcsa/config/perllib
+	# FIXME have it write the mysql password to /etc/myfrdcsa/config/perllib
 	apg -n 1 -m 16 > /etc/myfrdcsa/config/perllib
 	chown $USER.$GROUP /etc/myfrdcsa/config/perllib
 	chmod 600 /etc/myfrdcsa/config/perllib
     fi
 
     export PASS=`cat /etc/myfrdcsa/config/perllib`
+
     export DEBIAN_FRONTEND=noninteractive
+
+    # debconf-set-selections <<< "mysql-server-5.1 mysql-server/root_password password $PASS"
+    # debconf-set-selections <<< "mysql-server-5.1 mysql-server/root_password_again password $PASS"
+
     apt-get -q -y install mysql-server mysql-client
+
     echo "Give mysql server time to start up before we try to set a password..."
     sleep 5
 
-    mysql -uroot -e <<EOF
-EOSQL "UPDATE mysql.user SET Password=PASSWORD('$PASS') WHERE User='root'; FLUSH PRIVILEGES;"
-EOSQL
-echo "Done setting mysql password."
+    mysql -uroot <<EOF
+UPDATE mysql.user SET Password=PASSWORD('$PASS') WHERE User='root'; FLUSH PRIVILEGES;
 EOF
+
+    # echo "Give mysql server time to start up before we try to set a password..."
+    # sleep 5
+    # mysql -uroot -e <<EOF
+    # EOSQL "UPDATE mysql.user SET Password=PASSWORD('$PASS') WHERE User='root'; FLUSH PRIVILEGES;"
+    # EOSQL
+    # echo "Done setting mysql password."
+    # EOF
+
     unset DEBIAN_FRONTEND
 fi
 
-if ! [ -d "/var/lib/myfrdcsa/codebases" ]; then
+if [ ! -d "/var/lib/myfrdcsa/codebases" ]; then
     mkdir -p /var/lib/myfrdcsa/codebases
     chown -R $USER.$GROUP /var/lib/myfrdcsa
 fi
@@ -81,22 +100,23 @@ cd /var/lib/myfrdcsa/codebases
 
 if ! grep -q "Host posi.frdcsa.org" /home/$USER/.ssh/config; then
     echo -e "Host posi.frdcsa.org\n\tStrictHostKeyChecking no\n" >> /home/$USER/.ssh/config
-    chown $USER.$GROUP /home/$USER/.ssh/authorized_keys /home/$USER/.ssh/id_rsa /home/$USER/.ssh/config
+    chown $USER.$GROUP /home/$USER/.ssh/authorized_keys /home/$USER/.ssh/config
     cp $DATA_DIR/frdcsa_git_id_rsa /home/$USER/.ssh/id_rsa
     chown $USER.$GROUP /home/$USER/.ssh/id_rsa
+    chmod 600 /home/$USER/.ssh/id_rsa
 fi
 
-if ! [ -d "/var/lib/myfrdcsa/codebases/releases" ]; then
+if [ ! -d "/var/lib/myfrdcsa/codebases/releases" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/releases"
 fi
 
-if ! [ -d "/var/lib/myfrdcsa/codebases/minor" ]; then
+if [ ! -d "/var/lib/myfrdcsa/codebases/minor" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/minor"
 fi
 
 cd /home/$USER
 
-if ! [ -d "/home/$USER/.myconfig" ]; then
+if [ ! -d "/home/$USER/.myconfig" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/.myconfig"
 fi
 
@@ -105,24 +125,24 @@ if ! grep myfrdcsa .bashrc; then
     su $USER -c "/home/$USER/.myconfig/bin/install-myconfig.pl"
 fi
 
-if ! [ -d "/var/lib/myfrdcsa/codebases/internal" ]; then
+if [ ! -d "/var/lib/myfrdcsa/codebases/internal" ]; then
     # run the script for updating the perl links
     su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/internal/"
     su $USER -c "/var/lib/myfrdcsa/codebases/releases/myfrdcsa-0.1/myfrdcsa-0.1/scripts/gen-internal-links.pl"
 fi
 
 # verify creation
-if ! [ -h "/var/lib/myfrdcsa/codebases/internal/myfrdcsa" ]; then
+if [ ! -h "/var/lib/myfrdcsa/codebases/internal/myfrdcsa" ]; then
     echo "ERROR: gen internal links failed, exiting."
     exit 1
 fi
 
-if ! [ -h "/usr/share/perl5/MyFRDCSA" ]; then
+if [ ! -h "/usr/share/perl5/MyFRDCSA" ]; then
     /var/lib/myfrdcsa/codebases/internal/myfrdcsa/scripts/gen-perl-links.pl
 fi
 
 
-if ! [ -x "/root/.cpan" ]; then
+if [ ! -x "/root/.cpan" ]; then
     # setup CPAN
 
     # have it configure it by default
@@ -132,7 +152,7 @@ if ! [ -x "/root/.cpan" ]; then
     cpan -J
 fi
 
-if ! [ -d "/var/lib/myfrdcsa/codebases/data/" ]; then
+if [ ! -d "/var/lib/myfrdcsa/codebases/data/" ]; then
 
     su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/data/"
 
@@ -157,13 +177,13 @@ fi
 
 cd /var/lib/myfrdcsa/codebases/internal/kbfs/data
 
-if ! [ -d "/var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups" ]; then
+if [ ! -d "/var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups" ]; then
     su $USER -c "mkdir /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups"
 fi
 
 cd /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups
 
-if ! [ -d "/var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups/mysql-backup" ]; then
+if [ ! -d "/var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups/mysql-backup" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/mysql-backup"
 
     if ! [ -d "mysql-backup" ]; then
@@ -185,12 +205,13 @@ fi
 
 
 if ! [ -d "$DATA_DIR/frdcsa-misc" ]; then
-    cd /home/$USER
+    cd $DATA_DIR
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/frdcsa-misc"
 fi
 
-FILE_STAT_INSTALLED=`perldoc -l File::Signature`
-if [ $FILE_STAT_INSTALLED == "" || ! [ -f $FILE_STAT_INSTALLED ]; then
+# FILE_STAT_INSTALLED=`perldoc -l File::Signature`
+# if [ $FILE_STAT_INSTALLED == "" || ! [ -f $FILE_STAT_INSTALLED ]; then
+if ! perldoc -l File::Signature; then
     # DONE: FIXME: manually install File::Stat
     cd /tmp && tar xzf $DATA_DIR/frdcsa-misc/File-Stat-0.01.tar.gz 
     cd File-Stat-0.01/
@@ -219,13 +240,16 @@ fi
 if ! [ -d "/var/lib/myfrdcsa/codebases/data/freekbs2/theorem-provers" ]; then
     # scp -r andrewdo@justin.frdcsa.org:/var/lib/myfrdcsa/codebases/data/freekbs2/theorem-provers .
     cd /var/lib/myfrdcsa/codebases/data/freekbs2
-    sudo cp -ar $DATA_DIR/frdcsa-misc/theorem-provers .
+    cp -ar $DATA_DIR/frdcsa-misc/theorem-provers .
 fi
 
 # # get SPSE2 running
 
 if ! [ -d "/var/lib/myfrdcsa/sandbox" ]; then
-    su $USER -c "mkdir /var/lib/myfrdcsa/sandbox"
+    # su $USER -c "mkdir /var/lib/myfrdcsa/sandbox"
+    mkdir /var/lib/myfrdcsa/sandbox
+    chown -R $USER.$GROUP /var/lib/myfrdcsa/sandbox
+
 fi
 
 if ! [ -d "/var/lib/myfrdcsa/sandbox/opencyc-4.0/opencyc-4.0" ]; then
@@ -253,10 +277,21 @@ if true; then
     /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W"
 fi
 
+export TMP_PERL_MM_OPT=$PERL_MM_OPT
+export PERL_MM_OPT=
+
 FILE_SIGNATURE_INSTALLED=`perldoc -l File::Signature`
-if [ $FILE_SIGNATURE_INSTALLED == "" ] || ! [ -f $FILE_SIGNATURE_INSTALLED ]; then
+if [ $FILE_SIGNATURE_INSTALLED == "" ] || [ ! -f $FILE_SIGNATURE_INSTALLED ]; then
     cpanm -f File::Signature
 fi
+
+AI_PROLOG_INSTALLED=`perldoc -l AI::Prolog`
+if [ $AI_PROLOG_INSTALLED == "" ] || [ ! -f $AI_PROLOG_INSTALLED ]; then
+    cpanm --force AI::Prolog
+fi
+
+export PERL_MM_OPT=$TMP_PERL_MM_OPT
+
 
 if true; then
     cd /var/lib/myfrdcsa/codebases/internal/boss && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies ./boss
@@ -307,7 +342,7 @@ cd /var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/
 
 # for corpus
 
-if ! [ -d "/var/lib/myfrdcsa/sandbox/meteor-0.6" ]; then
+if [ ! -d "/var/lib/myfrdcsa/sandbox/meteor-0.6" ]; then
     su $USER -c "mkdir /var/lib/myfrdcsa/sandbox/meteor-0.6"
     cd /var/lib/myfrdcsa/sandbox/meteor-0.6
     su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/meteor-0.6 ."
@@ -350,11 +385,12 @@ if [ ! -d "/var/lib/myfrdcsa/codebases/external" ]; then
     su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/external"
 fi
 
-if [ ! -d "/var/lib/myfrdcsa/sandbox/termex-1.49" ]; then
-    su $USER -c "mkdir -p /var/lib/myfrdcsa/sandbox/termex-1.49"
-    su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/termex-1.49 /var/lib/myfrdcsa/sandbox/termex-1.49/"
-    cd /var/lib/myfrdcsa/sandbox/termex-1.49/termex-1.49
-    perl Makefile.PL
+if ! [ -d "/var/lib/myfrdcsa/sandbox/termex-1.49/termex-1.49" ]; then
+    su $USER -c "mkdir /var/lib/myfrdcsa/sandbox/termex-1.49"
+    cd /var/lib/myfrdcsa/sandbox/termex-1.49
+    su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/termex-1.49 ."
+    cd termex-1.49
+    su $USER -c "perl Makefile.PL"
     make install
 fi
 
@@ -397,7 +433,7 @@ cd /var/lib/myfrdcsa/codebases/internal/corpus
 apt-file update
 
 # for clear
-if ! [ -d "/etc/clear" ]; then
+if [ ! -d "/etc/clear" ]; then
     cd /etc
     cp -ar $DATA_DIR/frdcsa-misc/etc/clear .
 fi
