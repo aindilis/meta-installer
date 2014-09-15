@@ -14,6 +14,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.hostname = "panoply.frdcsa.org"
   config.vm.provision :shell, :path => "bootstrap.sh"
 
+
+
+
   # config.vm.network "public_network", :bridge => 'eth1', ip: "173.165.36.102"
   # config.vm.synced_folder "/var/lib/myfrdcsas/versions/myfrdcsa-1.1/vagrant-machines/CiteseerX/.data/csx", "/home/csx", :owner => 'csx', :group => 'csx', :mount_options => ['dmode=755', 'fmode=755']
 
@@ -44,6 +47,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # If true, then any SSH connections made will enable agent forwarding.
   # Default value: false
   # config.ssh.forward_agent = true
+  config.ssh.forward_x11 = true
 
   # Share an additional folder to the guest VM. The first argument is
   # the path on the host to the actual folder. The second argument is
@@ -126,4 +130,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # chef-validator, unless you changed the configuration.
   #
   #   chef.validation_client_name = "ORGNAME-validator"
+
+  
+
 end

@@ -132,9 +132,11 @@ if [ ! -d "/home/$USER/.myconfig" ]; then
     exit 1
 fi
 
+export DATETIMESTAMP=`date "+%Y%m%d%H%M%S"`
 
 if ! grep myfrdcsa .bashrc; then
-    mv /home/$USER/.emacs.d /home/$USER/.emacs.d.old
+    mv /home/$USER/.bashrc /home/$USER/.bashrc.$DATETIMESTAMP
+    mv /home/$USER/.emacs.d /home/$USER/.emacs.d.$DATETIMESTAMP
     su $USER -c "/home/$USER/.myconfig/bin/install-myconfig.pl"
 fi
 if ! grep myfrdcsa .bashrc; then
@@ -243,13 +245,24 @@ if ! echo show databases | mysql -u root --password="$TEMP_IDENTIFIER" | grep un
 	cat $it.sql | mysql -u root --password="$TEMP_IDENTIFIER" $it ; 
     done
 fi
+if ! echo show databases | mysql -u root --password="$TEMP_IDENTIFIER" | grep unilang; then
+    echo "ERROR: databases apparently didn't load"
+    exit 1
+fi
 
 
-
-if ! [ -d "$DATA_DIR/frdcsa-misc" ]; then
+if [ ! -d "$DATA_DIR/frdcsa-misc" ]; then
     cd $DATA_DIR
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/frdcsa-misc"
+else
+    cd $DATA_DIR/frdcsa-misc
+    su $USER -c "git pull"
 fi
+if [ ! -d "$DATA_DIR/frdcsa-misc" ]; then
+    echo "ERROR: didn't checkout frdcsa-misc properly"
+    exit 1
+fi
+
 
 # FILE_STAT_INSTALLED=`perldoc -l File::Signature`
 # if [ $FILE_STAT_INSTALLED == "" || ! [ -f $FILE_STAT_INSTALLED ]; then
@@ -261,15 +274,53 @@ if ! perldoc -l File::Signature; then
     make
     make install
 fi
+if ! perldoc -l File::Signature; then
+    echo "ERROR: didn't install File::Signature correctly"
+    exit 1
+fi
+
+echo "Finishing for now";
+exit 1
+
+
+
+
+
+
+
+#########################################################################################
 
 if false; then
+
+
+
+    ################################
+    # FIXME FIXME FIXME FIXME FIXME
+    ################################
+
+
+    # need to add -W flag to all these programs
+
+
+    # also need to have it pull repositories that already exist on the
+    # system, to make sure they are up to date.
+
+
+    ################################
+    # FIXME FIXME FIXME FIXME FIXME
+    ################################
+
+
+
+
+
     # FIXME: alter install-script-dependencies run apt-get with -y etc when run with NONINTERACTIVE=true
-    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/unilang/start -s -u localhost 9000 -c"
-    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/unilang/scripts/web-services/server -u -t XMLRPC"
-    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/manager/manager -u --scheduler"
+    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/unilang/start -s -u localhost 9000 -c -W"
+    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/unilang/scripts/web-services/server -u -t XMLRPC -W"
+    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/manager/manager -u --scheduler -W"
 
     cd /var/lib/myfrdcsa/codebases/minor/spse
-    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./spse2 -l"
+    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./spse2 -l -W"
 
     cd /usr/local/share/perl
 
