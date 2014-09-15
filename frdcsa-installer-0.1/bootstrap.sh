@@ -2,11 +2,18 @@
 
 export NONINTERACTIVE=true
 export PRIVATE_INSTALL=false
+export UPDATE_REPOS=0
 
 # FIXME: make the installer idempotent
 
 export INSTALL_TO_VAGRANT=true
 export INSTALL_TO_HOST=false
+
+if [[ $INSTALL_TO_VAGRANT == true && $INSTALL_TO_HOST == true ]] ||
+    [[ $INSTALL_TO_VAGRANT == false && $INSTALL_TO_HOST == false ]]; then
+    echo "Currently only one must be true at a time of INSTALL_TO_VAGRANT and INSTALL_TO_HOST"
+    exit 1
+fi
 
 if $INSTALL_TO_VAGRANT == true; then
     export USER="vagrant"
@@ -108,6 +115,12 @@ fi
 
 if [ ! -d "/var/lib/myfrdcsa/codebases/releases" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/releases"
+else
+    if [ $UPDATE_REPOS == 1 ]; then
+	pushd /var/lib/myfrdcsa/codebases/releases
+	su $USER -c "git pull"
+	popd
+    fi
 fi
 if [ ! -d "/var/lib/myfrdcsa/codebases/releases" ]; then
     echo "ERROR: Didn't check out /var/lib/myfrdcsa/codebases/releases"
@@ -116,6 +129,12 @@ fi
 
 if [ ! -d "/var/lib/myfrdcsa/codebases/minor" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/minor"
+else
+    if [ $UPDATE_REPOS == 1 ]; then
+	pushd /var/lib/myfrdcsa/codebases/minor
+	su $USER -c "git pull"
+	popd
+    fi
 fi
 if [ ! -d "/var/lib/myfrdcsa/codebases/minor" ]; then
     echo "ERROR: Didn't check out /var/lib/myfrdcsa/codebases/minor"
@@ -126,6 +145,12 @@ cd /home/$USER
 
 if [ ! -d "/home/$USER/.myconfig" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/.myconfig"
+else
+    if [ $UPDATE_REPOS == 1 ]; then
+	pushd /home/$USER/.myconfig
+	su $USER -c "git pull"
+	popd
+    fi
 fi
 if [ ! -d "/home/$USER/.myconfig" ]; then
     echo "ERROR: Didn't check out /home/$USER/.myconfig"
@@ -192,22 +217,36 @@ fi
 if $PRIVATE_INSTALL; then
     if [ ! -h /home/$USER/.config/frdcsa ]; then
 	cd /home/$USER
-	mkdir .config
+	mkdir -p .config
+	chown $USER.$GROUP .config
 	cd .config
 	su $USER -c "git clone ssh://andrewdo@192.168.1.220/gitroot/frdcsa-private"
 	ln -s frdcsa-private frdcsa
+    else
+	if [ $UPDATE_REPOS == 1 ]; then
+	    pushd /home/$USER/.config/frdcsa-private
+	    su $USER -c "git pull"
+	    popd
+	fi
     fi
     if [ ! -h /home/$USER/.config/frdcsa ]; then
 	echo "ERROR: didn't checkout /home/$USER/.config/frdcsa properly, exiting."
 	exit 1
     fi
-elif
+else
     if [ ! -h /home/$USER/.config/frdcsa ]; then
 	cd /home/$USER
-	mkdir .config
+	mkdir -p .config
+	chown $USER.$GROUP .config
 	cd .config
-	su $USER -c "git clone ssh://andrewdo@posi.frdcsa.org/gitroot/frdcsa-public"
+	su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/frdcsa-public"
 	ln -s frdcsa-public frdcsa
+    else
+	if [ $UPDATE_REPOS == 1 ]; then
+	    pushd /home/$USER/.config/frdcsa-public
+	    su $USER -c "git pull"
+	    popd
+	fi
     fi
     if [ ! -h /home/$USER/.config/frdcsa ]; then
 	echo "ERROR: didn't checkout /home/$USER/.config/frdcsa properly, exiting."
@@ -229,11 +268,16 @@ cd /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups
 
 if [ ! -d "/var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups/mysql-backup" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/mysql-backup"
-
-    if ! [ -d "mysql-backup" ]; then
-	echo "ERROR: failed to clone mysql-backup, exiting."
-	exit 1
+else
+    if [ $UPDATE_REPOS == 1 ]; then
+	pushd /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups/mysql-backup
+	su $USER -c "git pull"
+	popd
     fi
+fi
+if ! [ -d "/var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups/mysql-backup" ]; then
+    echo "ERROR: failed to clone mysql-backup, exiting."
+    exit 1
 fi
 
 export TEMP_IDENTIFIER=`cat /etc/myfrdcsa/config/perllib`
@@ -255,8 +299,11 @@ if [ ! -d "$DATA_DIR/frdcsa-misc" ]; then
     cd $DATA_DIR
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/frdcsa-misc"
 else
-    cd $DATA_DIR/frdcsa-misc
-    su $USER -c "git pull"
+    if [ $UPDATE_REPOS == 1 ]; then
+	pushd $DATA_DIR/frdcsa-misc
+	su $USER -c "git pull"
+	popd
+    fi
 fi
 if [ ! -d "$DATA_DIR/frdcsa-misc" ]; then
     echo "ERROR: didn't checkout frdcsa-misc properly"
