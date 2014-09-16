@@ -408,15 +408,11 @@ if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-ru
 
     # echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
 
-    echo "Setting timed stopper"
-
-    echo "Duration $UNILANG_INSTALL_SLEEP_DURATION"
-    (sleep $UNILANG_INSTALL_SLEEP_DURATION; echo "Stopping UniLang"; /etc/init.d/unilang stop; killall start unilang unilang-client) &
+    echo "Setting timed stopper, duration $UNILANG_INSTALL_SLEEP_DURATION"
 
     echo "Trying to launch UniLang to try to get dependencies"
-    while ! NONINTERACTIVE=true /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; do
+    while ((sleep $UNILANG_INSTALL_SLEEP_DURATION; echo "Stopping UniLang"; /etc/init.d/unilang stop; killall start unilang unilang-client) &) && ! NONINTERACTIVE=true /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; do
 	echo "Setting timed stopper (again)"
-	(sleep $UNILANG_INSTALL_SLEEP_DURATION; echo "Stopping UniLang"; /etc/init.d/unilang stop; killall start unilang unilang-client) &
     done
 
     echo "UniLang exited manually, cleaning up"
@@ -753,6 +749,16 @@ if ! [ -d "/var/lib/myfrdcsa/sandbox/stanford-ner-20080306/stanford-ner-20080306
 fi
 if ! [ -d "/var/lib/myfrdcsa/sandbox/stanford-ner-20080306/stanford-ner-20080306" ]; then
     echo "ERROR: Stanford-Ner-20080306 did not copy"
+    exit 1
+fi
+
+if ! [ -d "/var/lib/myfrdcsa/sandbox/montylingua-2.1/montylingua-2.1" ]; then
+    su $USER -c "mkdir /var/lib/myfrdcsa/sandbox/montylingua-2.1"
+    cd /var/lib/myfrdcsa/sandbox/montylingua-2.1
+    su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/montylingua-2.1 ."
+fi
+if ! [ -d "/var/lib/myfrdcsa/sandbox/montylingua-2.1/montylingua-2.1" ]; then
+    echo "ERROR: MontyLingua 2.1 did not copy"
     exit 1
 fi
 
