@@ -67,7 +67,7 @@ if [ $APT_UPDATED == 0 ]; then
     apt-get update
     export export APT_UPDATED=1
 fi
-apt-get install -y build-essential git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip libb-utils-perl libcal-dav-perl libconfig-general-perl libdata-dump-streamer-perl libfile-slurp-perl libfile-which-perl libgetopt-declare-perl libgraph-perl libpadwalker-perl libproc-processtable-perl libstring-shellquote-perl libstring-similarity-perl libtask-weaken-perl libterm-readkey-perl libtie-ixhash-perl libtk-perl libunicode-map8-perl libunicode-string-perl libxml-atom-perl libxml-dumper-perl libxml-perl libxml-twig-perl libnet-telnet-perl liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane libevent-perl libfile-pid-perl libxml-smart-perl
+apt-get install -y build-essential git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip libb-utils-perl libcal-dav-perl libconfig-general-perl libdata-dump-streamer-perl libfile-slurp-perl libfile-which-perl libgetopt-declare-perl libgraph-perl libpadwalker-perl libproc-processtable-perl libstring-shellquote-perl libstring-similarity-perl libtask-weaken-perl libterm-readkey-perl libtie-ixhash-perl libtk-perl libunicode-map8-perl libunicode-string-perl libxml-atom-perl libxml-dumper-perl libxml-perl libxml-twig-perl libnet-telnet-perl liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane libevent-perl libfile-pid-perl libxml-smart-perl libnet-dbus-perl
 
 if ! dpkg -l | grep wamerican-insane | grep -q '^ii'; then
     echo "ERROR: first major group of packages did not install"
@@ -746,13 +746,21 @@ if ! [ -d "/var/lib/myfrdcsa/sandbox/termex-1.49/termex-1.49" ]; then
     exit 1
 fi
 
-
+if ! [ -d "/var/lib/myfrdcsa/sandbox/stanford-ner-20080306/stanford-ner-20080306" ]; then
+    su $USER -c "mkdir /var/lib/myfrdcsa/sandbox/stanford-ner-20080306"
+    cd /var/lib/myfrdcsa/sandbox/stanford-ner-20080306
+    su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/stanford-ner-20080306 ."
+fi
+if ! [ -d "/var/lib/myfrdcsa/sandbox/stanford-ner-20080306/stanford-ner-20080306" ]; then
+    echo "ERROR: Stanford-Ner-20080306 did not copy"
+    exit 1
+fi
 
 # FIXME: do we need to add a cabinet here?
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/paperless-office && NONINTERACTIVE=true install-script-dependencies \"./paperless-office -W\""
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Module::Build"
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WWW::Mechanize::Cached"
-su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Yahoo::Search"
+su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules -f Yahoo::Search"
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/workhorse/scripts/ && NONINTERACTIVE=true install-script-dependencies \"./process-corpus.pl -W\""
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Archive::Zip"
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation && NONINTERACTIVE=true install-script-dependencies \"./process-2.pl -W\""
@@ -815,4 +823,3 @@ su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss/
 # NONINTERACTIVE=true install-script-dependencies /var/lib/myfrdcsa/codebases/internal/verber
 
 echo "Finished FRDCSA Install"
-
