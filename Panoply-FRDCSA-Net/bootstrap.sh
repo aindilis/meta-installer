@@ -383,9 +383,14 @@ echo "Stopping UniLang in case it was already running from a previous run of the
 /etc/init.d/unilang stop
 killall start unilang unilang-client
 
+export UNILANG_START_DURATION=5
+export UNILANG_INSTALL_SLEEP_DURATION=35
+let UNILANG_INSTALL_SLEEP_DURATION_PLUS_WAIT=$UNILANG_INSTALL_SLEEP_DURATION+5
+export UNILANG_INSTALL_SLEEP_DURATION_PLUS_WAIT
+
 echo "Starting UniLang to test if it works"
 /etc/init.d/unilang start
-sleep 5
+sleep $UNILANG_START_DURATION
 if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-running.pl; then
 
     cd /var/lib/myfrdcsa/codebases/internal/unilang
@@ -400,18 +405,18 @@ if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-ru
     # echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
 
     echo "Setting timed stopper"
-    export $UNILANG_INSTALL_SLEEP_DURATION=35
+
     echo "Duration $UNILANG_INSTALL_SLEEP_DURATION"
-    (sleep $UNILANG_INSTALL_SLEEP_DURATION; /etc/init.d/unilang stop; killall start unilang unilang-client) &
+    (sleep $UNILANG_INSTALL_SLEEP_DURATION; echo "Stopping UniLang"; /etc/init.d/unilang stop; killall start unilang unilang-client) &
 
     echo "Trying to launch UniLang to try to get dependencies"
     while ! NONINTERACTIVE=true /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; do
 	echo "Setting timed stopper (again)"
-	(sleep $UNILANG_INSTALL_SLEEP_DURATION; /etc/init.d/unilang stop; killall start unilang unilang-client) &
+	(sleep $UNILANG_INSTALL_SLEEP_DURATION; echo "Stopping UniLang"; /etc/init.d/unilang stop; killall start unilang unilang-client) &
     done
 
     echo "UniLang exited manually, cleaning up"
-    sleep (($UNILANG_INSTALL_SLEEP_DURATION + 5))
+    sleep $UNILANG_INSTALL_SLEEP_DURATION_PLUS_WAIT
 
 else
     echo "UniLang is already installed and running; stopping UniLang"
@@ -423,7 +428,7 @@ echo "UniLang is currently installed"
 
 echo "UniLang starting up again to install subsequent agents"
 /etc/init.d/unilang start
-sleep 5
+sleep $UNILANG_START_DURATION
 
 echo "Starting web-services"
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/unilang && NONINTERACTIVE=true install-script-dependencies \"./scripts/web-services/server -u -t XMLRPC -W 10000\""
@@ -575,7 +580,7 @@ if ! perldoc -l Net::Google::Calendar; then
 fi
 
 /etc/init.d/unilang start
-sleep 5
+sleep $UNILANG_START_DURATION
 
 if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
     su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts && NONINTERACTIVE=true install-script-dependencies \"./kbs2 -y -c Org::FRDCSA::Verber::PSEx2::Do fast-import /var/lib/myfrdcsa/codebases/minor/spse/kbs/do2.kbs\""
