@@ -687,6 +687,19 @@ if [ ! -d "/usr/local/include/link-grammar" ]; then
     exit 1
 fi
 
+export TMP_PERL_MM_OPT=$PERL_MM_OPT
+export PERL_MM_OPT=
+
+if ! perldoc -l Lingua::LinkParser; then
+    cpanm -f Lingua::LinkParser
+fi
+export PERL_MM_OPT=$TMP_PERL_MM_OPT
+
+if ! perldoc -l Lingua::LinkParser; then
+    echo "ERROR: didn't install Lingua::LinkParser correctly"
+    exit 1
+fi
+
 su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/external"
 
 if ! [ -d "/var/lib/myfrdcsa/sandbox/termex-1.49/termex-1.49" ]; then
@@ -757,14 +770,16 @@ update-dlocatedb
 echo "updatedb"
 updatedb
 
-# # now need to copy over all files related to getting various
-# # textanalysis items working, such as montylingua, etc
+# FIXME: get the patch working
 
-# # areas to improve
+# now need to copy over all files related to getting various
+# textanalysis items working, such as montylingua, etc
 
-# # the .myconfig stuff
-# # the database copying and installation
-# # the installation of SPSE2-related perl modules
+# areas to improve
+
+# the .myconfig stuff
+# the database copying and installation
+# the installation of SPSE2-related perl modules
 
 # cd /var/lib/myfrdcsa/codebases/internal/verber/data
 # scp -r andrewdo@justin.frdcsa.org:/var/lib/myfrdcsa/codebases/internal/verber/data/ .
@@ -774,3 +789,5 @@ updatedb
 # install-script-dependencies /var/lib/myfrdcsa/codebases/internal/verber
 
 echo "Finished FRDCSA Install"
+
+
