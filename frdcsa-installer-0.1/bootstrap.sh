@@ -639,9 +639,6 @@ fi
 
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/ && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./frdcsa-applet -W\""
 
-echo "Finishing for now"
-exit 1
-
 # put the stuff in /etc/init.d
 # @ (frdcsa-applet &) <- as of Sun Sep 14 21:58:06 CDT 2014, not sure what this is about
 
@@ -652,6 +649,10 @@ if [ ! -d "/var/lib/myfrdcsa/sandbox/meteor-0.6" ]; then
     cd /var/lib/myfrdcsa/sandbox/meteor-0.6
     su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/meteor-0.6 ."
 fi
+if [ ! -d "/var/lib/myfrdcsa/sandbox/meteor-0.6" ]; then
+    echo "ERROR: Did not copy meteor-0.6 properly"
+    exit 1
+fi
 
 # # fix the username for this file, or fix the whole concept
 
@@ -659,18 +660,17 @@ fi
 # add frdcsa-applet to the startup applications
 
 
-
 # FIXME: run unilang tests and report on success
 
 # # # sudo shutdown -r now
 
 cd /var/lib/myfrdcsa/
-mkdir datasets
+mkdir -p datasets
 chown $USER.$GROUP datasets
 
 # for workhorse
 if ! dpkg -l | grep uima-doc | grep -q '^ii'; then
-    apt-get install -y liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils
+    apt-get install -y liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane
 fi
 if ! dpkg -l | grep uima-doc | grep -q '^ii'; then
     echo "ERROR: second major group of packages did not install"
@@ -718,14 +718,14 @@ su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scri
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./process-2.pl -W\""
 
 
-if ! dpkg -l | grep libwordnet-querydata-perl | grep -q '^ii'; then
-    # /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WordNet::QueryData
-    apt-get install -y wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane
-fi
-if ! dpkg -l | grep libwordnet-querydata-perl | grep -q '^ii'; then
-    echo "ERROR: third major group of packages did not install"
-    exit 1
-fi    
+# if ! dpkg -l | grep libwordnet-querydata-perl | grep -q '^ii'; then
+#     # /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WordNet::QueryData
+#     apt-get install -y wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane
+# fi
+# if ! dpkg -l | grep libwordnet-querydata-perl | grep -q '^ii'; then
+#     echo "ERROR: third major group of packages did not install"
+#     exit 1
+# fi    
 
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/corpus && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./corpus -h\""
 
