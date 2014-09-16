@@ -715,7 +715,15 @@ if ! [ -d "/var/lib/myfrdcsa/sandbox/termex-1.49/termex-1.49" ]; then
     exit 1
 fi
 
-
+if ! [ -d "/var/lib/myfrdcsa/sandbox/stanford-ner-20080306/stanford-ner-20080306" ]; then
+    su $USER -c "mkdir /var/lib/myfrdcsa/sandbox/stanford-ner-20080306"
+    cd /var/lib/myfrdcsa/sandbox/stanford-ner-20080306
+    su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/stanford-ner-20080306 ."
+fi
+if ! [ -d "/var/lib/myfrdcsa/sandbox/stanford-ner-20080306/stanford-ner-20080306" ]; then
+    echo "ERROR: Stanford-Ner-20080306 did not copy"
+    exit 1
+fi
 
 # FIXME: do we need to add a cabinet here?
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/paperless-office && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./paperless-office -W\""

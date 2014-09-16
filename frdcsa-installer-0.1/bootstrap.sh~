@@ -16,7 +16,7 @@ export INSTALL_TO_HOST=false
 
 if [[ $INSTALL_TO_VAGRANT == true && $INSTALL_TO_HOST == true ]] ||
     [[ $INSTALL_TO_VAGRANT == false && $INSTALL_TO_HOST == false ]]; then
-    echo "Currently only one must be true at a time of INSTALL_TO_VAGRANT and INSTALL_TO_HOST"
+    echo "ERROR: Currently only one must be true at a time of INSTALL_TO_VAGRANT and INSTALL_TO_HOST"
     exit 1
 fi
 
@@ -61,6 +61,11 @@ if ! dpkg -l | grep xclip | grep -q '^ii'; then
     apt-get update
     apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip
 fi
+if ! dpkg -l | grep xclip | grep -q '^ii'; then
+    echo "ERROR: first major group of packages did not install"
+    exit 1
+fi
+
 
 if ! dpkg -l | grep -E 'mysql-server-[0-9]+' | grep -q '^ii'; then
     
@@ -319,13 +324,13 @@ export PERL_MM_OPT=
 if ! perldoc -l File::Signature; then
     cpanm -f File::Signature
 fi
-
 export PERL_MM_OPT=$TMP_PERL_MM_OPT
 
 if ! perldoc -l File::Signature; then
     echo "ERROR: didn't install File::Signature correctly"
     exit 1
 fi
+
 
 if ! perldoc -l File::Stat; then
     # DONE: FIXME: manually install File::Stat
@@ -500,53 +505,113 @@ if ! perldoc -l AI::Prolog; then
     exit 1
 fi
 
+cd /var/lib/myfrdcsa/codebases/minor/spse
+
+if ! perldoc -l Graph::Directed; then
+    su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Graph::Directed"
+fi
+if ! perldoc -l Graph::Directed; then
+    echo "ERROR: Graph::Directed did not install"
+    exit 1
+fi
+
+if ! perldoc -l Ubigraph; then
+    su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Ubigraph"
+fi
+if ! perldoc -l Ubigraph; then
+    echo "ERROR: Ubigraph did not install"
+    exit 1
+fi
+
+if ! perldoc -l Cal::DAV; then
+    su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Cal::DAV"
+fi
+if ! perldoc -l Cal::DAV; then
+    echo "ERROR: Cal::DAV did not install"
+    exit 1
+fi
+
+if ! perldoc -l Net::Google::Calendar; then
+    su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Net::Google::Calendar"
+fi
+if ! perldoc -l Net::Google::Calendar; then
+    echo "ERROR: Net::Google::Calendar did not install"
+    exit 1
+fi
+
 /etc/init.d/unilang start
 sleep 5
 
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts && install-script-dependencies \"./kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import do2.kbs\""
+if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
+    su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts && install-script-dependencies \"echo y | ./kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import /var/lib/myfrdcsa/codebases/minor/spse/kbs/do2.kbs\""
+fi
+if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
+    echo "ERROR: Org::FRDCSA::Verber::PSEx2::Do did not load"
+    exit 1
+fi
 
 # do something about having to constantly close the GUI to get
 # this to work, add some kill switch inside or preinstall the
 # modules.
 
+if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::PICForm::PIC::Vis::Metadata; then
+    cd /var/lib/myfrdcsa/codebases/minor/spse/kbs
+    echo y | /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -c Org::PICForm::PIC::Vis::Metadata fast-import metadata.kbs
+fi
+if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::PICForm::PIC::Vis::Metadata; then
+    echo "ERROR: Org::PICForm::PIC::Vis::Metadata did not load"
+    exit 1
+fi
+
+# if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
+#     cd /var/lib/myfrdcsa/codebases/minor/spse/kbs
+#     echo y | /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import do2.kbs
+# fi
+# if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
+#     echo "ERROR: Org::FRDCSA::Verber::PSEx2::Do did not load"
+#     exit 1
+# fi
+
 echo "Starting Test-use"
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse/scripts/ && install-script-dependencies ./test-use.pl"
 
 echo "Starting SPSE2"
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && install-script-dependencies \"spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W 10000\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && XAUTHORITY=/home/$USER/.Xauthority install-script-dependencies \"spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W 10000\""
 
-# update this patch to work with the latest version of Tk::GraphViz
-# FIXME: copy the modified patch to the gitroot, along with other modifications
-cd /usr/local/share/perl
-if ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
-    patch -p0 -i /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
+# # update this patch to work with the latest version of Tk::GraphViz
+# # FIXME: copy the modified patch to the gitroot, along with other modifications
+# cd /usr/local/share/perl
+# if [ ! -f /usr/local/share/perl/5.18.1/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
+#     patch -p0 -i /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
+# fi
+# if [ ! -f /usr/local/share/perl/5.18.1/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
+#     echo "ERROR: couldn't patch Tk::GraphViz"
+#     exit 1
+# fi
+
+export TMP_PERL_MM_OPT=$PERL_MM_OPT
+export PERL_MM_OPT=
+
+if ! perldoc -l Tk::Month; then
+    cpanm -f Tk::Month
 fi
-if ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
-    echo "ERROR: couldn't patch Tk::GraphViz"
+export PERL_MM_OPT=$TMP_PERL_MM_OPT
+
+if ! perldoc -l Tk::Month; then
+    echo "ERROR: didn't install Tk::Month correctly"
     exit 1
 fi
 
 echo "Starting SPSE2"
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W 10000\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W 20000\""
 
-/etc/init.d/unilang stop
-killall start unilang unilang-client
+# /etc/init.d/unilang stop
+# killall start unilang unilang-client
 
-echo "Finishing for now";
-exit 1
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./boss\""
+su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/internal/boss/data/namazu"
 
-
-
-##############################################################################################
-
-
-
-
-if true; then
-    cd /var/lib/myfrdcsa/codebases/internal/boss && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies ./boss
-    su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/internal/boss/data/namazu"
-    boss etags
-fi
+# FIXME: do "boss etags"
 
 # sudo netstat -tulpn
 # start unilang
@@ -555,36 +620,24 @@ fi
 
 # #### only do this if we didn't install a private install
 
-cd /var/lib/myfrdcsa/codebases/minor/spse
-/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Graph::Directed
-/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Ubigraph
-/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Cal::DAV
-/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Net::Google::Calendar
-
-cd /var/lib/myfrdcsa/codebases/minor/spse/kbs
-/var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -c Org::PICForm::PIC::Vis::Metadata fast-import metadata.kbs
-
-if [ ! $PRIVATE_INSTALL ]; then
-    cd /var/lib/myfrdcsa/codebases/minor/spse/kbs
-    /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import do2.kbs
-fi
-
 if [ $ARCH == "x86_64" ]; then
     # dpkg --add-architecture ia32
     dpkg --add-architecture i386
 fi
 
 # # get FRDCSA Applet working
-
 if ! [ -f "/var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/data/scater.gif" ]; then
     # scp -r andrewdo@justin.frdcsa.org:/var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/data .
     # su $USER -c "mkdir /var/lib/myfrdcsa/sandbox/opencyc-4.0"
     cd /var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/data/
     su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/frdcsa-dashboard/data/* ."
 fi
+if ! [ -f "/var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/data/scater.gif" ]; then
+    echo "ERROR: Did not properly copy frdcsa-dashboard"
+    exit 1
+fi
 
-cd /var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/
-/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./frdcsa-applet -W"
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/ && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./frdcsa-applet -W\""
 
 # put the stuff in /etc/init.d
 # @ (frdcsa-applet &) <- as of Sun Sep 14 21:58:06 CDT 2014, not sure what this is about
@@ -596,6 +649,10 @@ if [ ! -d "/var/lib/myfrdcsa/sandbox/meteor-0.6" ]; then
     cd /var/lib/myfrdcsa/sandbox/meteor-0.6
     su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/meteor-0.6 ."
 fi
+if [ ! -d "/var/lib/myfrdcsa/sandbox/meteor-0.6" ]; then
+    echo "ERROR: Did not copy meteor-0.6 properly"
+    exit 1
+fi
 
 # # fix the username for this file, or fix the whole concept
 
@@ -603,30 +660,47 @@ fi
 # add frdcsa-applet to the startup applications
 
 
-
 # FIXME: run unilang tests and report on success
 
 # # # sudo shutdown -r now
 
 cd /var/lib/myfrdcsa/
-mkdir datasets
+mkdir -p datasets
 chown $USER.$GROUP datasets
 
 # for workhorse
-sudo apt-get install -y liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils
-
-if [ ! -d "/var/lib/myfrdcsa/codebases/minor/corpus-manager/data/corpora/gutenberg" ]; then
-    su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/minor/corpus-manager/data/corpora/gutenberg"
-
+if ! dpkg -l | grep uima-doc | grep -q '^ii'; then
+    apt-get install -y liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane
 fi
+if ! dpkg -l | grep uima-doc | grep -q '^ii'; then
+    echo "ERROR: second major group of packages did not install"
+    exit 1
+fi
+
+su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/minor/corpus-manager/data/corpora/gutenberg"
 
 if [ ! -d "/usr/local/include/link-grammar" ]; then
     cp -ar /usr/include/link-grammar/ /usr/local/include
 fi
-
-if [ ! -d "/var/lib/myfrdcsa/codebases/external" ]; then
-    su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/external"
+if [ ! -d "/usr/local/include/link-grammar" ]; then
+    echo "ERROR: link-grammar did not copy"
+    exit 1
 fi
+
+export TMP_PERL_MM_OPT=$PERL_MM_OPT
+export PERL_MM_OPT=
+
+if ! perldoc -l Lingua::LinkParser; then
+    cpanm -f Lingua::LinkParser
+fi
+export PERL_MM_OPT=$TMP_PERL_MM_OPT
+
+if ! perldoc -l Lingua::LinkParser; then
+    echo "ERROR: didn't install Lingua::LinkParser correctly"
+    exit 1
+fi
+
+su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/external"
 
 if ! [ -d "/var/lib/myfrdcsa/sandbox/termex-1.49/termex-1.49" ]; then
     su $USER -c "mkdir /var/lib/myfrdcsa/sandbox/termex-1.49"
@@ -636,57 +710,102 @@ if ! [ -d "/var/lib/myfrdcsa/sandbox/termex-1.49/termex-1.49" ]; then
     su $USER -c "perl Makefile.PL"
     make install
 fi
+if ! [ -d "/var/lib/myfrdcsa/sandbox/termex-1.49/termex-1.49" ]; then
+    echo "ERROR: termex did not install"
+    exit 1
+fi
 
-cd /var/lib/myfrdcsa/codebases/minor/paperless-office
+
 
 # FIXME: do we need to add a cabinet here?
-/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./paperless-office -W"
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/paperless-office && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./paperless-office -W\""
 
-/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Module::Build
-/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WWW::Mechanize::Cached
-/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Yahoo::Search
+su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Module::Build"
+su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WWW::Mechanize::Cached"
+su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Yahoo::Search"
 
-cd /var/lib/myfrdcsa/codebases/minor/workhorse/scripts/
-/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./process-corpus.pl -W"
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/workhorse/scripts/ && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./process-corpus.pl -W\""
 
-/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Archive::Zip
-cd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation
-/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./process-2.pl -W"
+su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Archive::Zip"
 
-sudo apt-get install -y wordnet wordnet-base wordnet-gui libwordnet-querydata-perl
-# /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WordNet::QueryData
-
-cd /var/lib/myfrdcsa/codebases/internal/corpus
-/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies './corpus -h'
-
-# # now need to copy over all files related to getting various
-# # textanalysis items working, such as montylingua, etc
-
-# # areas to improve
-
-# # the .myconfig stuff
-# # the database copying and installation
-# # the installation of SPSE2-related perl modules
-
-# cd /var/lib/myfrdcsa/codebases/internal/verber/data
-# scp -r andrewdo@justin.frdcsa.org:/var/lib/myfrdcsa/codebases/internal/verber/data/ .
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./process-2.pl -W\""
 
 
-# generally useful but optional
-apt-file update
+# if ! dpkg -l | grep libwordnet-querydata-perl | grep -q '^ii'; then
+#     # /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WordNet::QueryData
+#     apt-get install -y wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane
+# fi
+# if ! dpkg -l | grep libwordnet-querydata-perl | grep -q '^ii'; then
+#     echo "ERROR: third major group of packages did not install"
+#     exit 1
+# fi    
+
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/corpus && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./corpus -h\""
+
 
 # for clear
 if [ ! -d "/etc/clear" ]; then
     cd /etc
     cp -ar $DATA_DIR/frdcsa-misc/etc/clear .
 fi
-apt-get install -y festival
-cd /var/lib/myfrdcsa/codebases/internal/clear && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W"
+if [ ! -d "/etc/clear" ]; then
+    echo "ERROR: /etc/clear did not copy"
+    exit 1
+fi  
+
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/clear && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W\""
+
+echo "Stopping UniLang"
+/etc/init.d/unilang stop
+killall start unilang unilang-client
+
+# generally useful but optional
+
+echo "apt-file update"
+apt-file update
+
+echo "update-dlocatedb"
+update-dlocatedb
+
+echo "updatedb"
+updatedb
+
+# FIXME: get the patch working
+
+# now need to copy over all files related to getting various
+# textanalysis items working, such as montylingua, etc
+
+# areas to improve
+
+# the .myconfig stuff
+# the database copying and installation
+# the installation of SPSE2-related perl modules
+
+# cd /var/lib/myfrdcsa/codebases/internal/verber/data
+# scp -r andrewdo@justin.frdcsa.org:/var/lib/myfrdcsa/codebases/internal/verber/data/ .
 
 # get academician
 # verber
 # install-script-dependencies /var/lib/myfrdcsa/codebases/internal/verber
 
-update-dlocatedb
-updatedb
+# vagrant@panoply:/var/lib/myfrdcsa/codebases/internal/clear$ install-script-dependencies './cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W'
+# SCRIPT: <./cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W>
+# Nothing left to install, exiting!
+# vagrant@panoply:/var/lib/myfrdcsa/codebases/internal/clear$ ./cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W
+# Base class package "Net::DBus::Service" is empty.
+#     (Perhaps you need to 'use' the module which defines that package first,
+#     or make that module available in @INC (@INC contains: /etc/perl /usr/local/lib/perl/5.14.2 /usr/local/share/perl/5.14.2 /usr/lib/perl5 /usr/share/perl5 /usr/lib/perl/5.14 /usr/share/perl/5.14 /usr/local/lib/site_perl .).
+#  at /usr/share/perl5/BOSS/App/DBus/Object.pm line 3.
+# BEGIN failed--compilation aborted at /usr/share/perl5/BOSS/App/DBus/Object.pm line 3.
+# Compilation failed in require at /usr/share/perl5/BOSS/App/DBus.pm line 3.
+# BEGIN failed--compilation aborted at /usr/share/perl5/BOSS/App/DBus.pm line 3.
+# Compilation failed in require at /usr/share/perl5/Clear/Mod/GUI.pm line 3.
+# BEGIN failed--compilation aborted at /usr/share/perl5/Clear/Mod/GUI.pm line 3.
+# Compilation failed in require at /usr/share/perl5/Clear.pm line 4.
+# BEGIN failed--compilation aborted at /usr/share/perl5/Clear.pm line 4.
+# Compilation failed in require at ./cla line 3.
+# BEGIN failed--compilation aborted at ./cla line 3.
+
+echo "Finished FRDCSA Install"
+
 
