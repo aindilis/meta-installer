@@ -6,6 +6,8 @@ export PERL_MM_USE_DEFAULT=1
 export PRIVATE_INSTALL=false
 export UPDATE_REPOS=0
 
+export THE_SOURCE="/var/lib/myfrdcsa/codebases/releases/myfrdcsa-0.1/myfrdcsa-0.1/frdcsa.bashrc"
+
 # FIXME: make the installer idempotent
 
 export INSTALL_TO_VAGRANT=true
@@ -59,7 +61,7 @@ if ! dpkg -l | grep -E 'mysql-server-[0-9]+' | grep -q '^ii'; then
 
     # FIXME: add something here to abort installation if it detects that it will remove any packages
     
-    apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file
+    apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip
 
     # http://stackoverflow.com/questions/1202347/how-can-i-pass-a-password-from-a-bash-script-to-aptitude-for-installing-mysql
 
@@ -332,30 +334,43 @@ if ! perldoc -l File::Stat; then
     exit 1
 fi
 
-/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/unilang/start -s -u localhost 9000 -c -W"
-/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/unilang/scripts/web-services/server -u -t XMLRPC -W"
-/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/manager/manager -u --scheduler -W"
-/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/minor/spse/spse2 -l -W"
-
-# update this patch to work with the latest version of Tk::GraphViz
-# FIXME: copy the modified patch to the gitroot, along with other modifications
-cd /usr/local/share/perl
-if ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
-    patch -p0 -i -R /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
-fi
-if ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
-    echo "ERROR: couldn't patch Tk::GraphViz"
-    exit 1
+if [ ! -f "/etc/init.d/unilang" ]; then
+    cat /var/lib/myfrdcsa/codebases/internal/unilang/systems/etc/init.d/unilang | perl -pe "s/<USERNAME>/$USER/sg" > /etc/init.d/unilang
+    sudo chmod 755 /etc/init.d/unilang 
+    sudo update-rc.d unilang defaults
 fi
 
-echo "Finishing for now";
-exit 1
+# /etc/init.d/unilang restart
 
+echo "Stopping UniLang"
+killall unilang
+
+# if [ false ]; then
+#     echo "Starting UniLang"
+#     echo 'killall unilang' | at now + 2 minutes
+#     cd /var/lib/myfrdcsa/codebases/internal/unilang && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"
+# fi
+
+/etc/init.d/unilang start
+sleep 10
+
+echo "Starting web-services"
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/unilang && install-script-dependencies \"./scripts/web-services/server -u -t XMLRPC -W 10000\""
+
+echo "Starting Manager"
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/manager && install-script-dependencies \"./manager -u --scheduler -W 10000\""
+
+/etc/init.d/unilang stop
+killall start unilang unilang-client
 
 if ! [ -d "/var/lib/myfrdcsa/codebases/data/freekbs2/theorem-provers" ]; then
     # scp -r andrewdo@justin.frdcsa.org:/var/lib/myfrdcsa/codebases/data/freekbs2/theorem-provers .
     cd /var/lib/myfrdcsa/codebases/data/freekbs2
     cp -ar $DATA_DIR/frdcsa-misc/theorem-provers .
+fi
+if ! [ -d "/var/lib/myfrdcsa/codebases/data/freekbs2/theorem-provers" ]; then
+    echo "ERROR: Didn't set up freekbs2 theorem-provers properly"
+    exit 1
 fi
 
 # # get SPSE2 running
@@ -364,7 +379,10 @@ if ! [ -d "/var/lib/myfrdcsa/sandbox" ]; then
     # su $USER -c "mkdir /var/lib/myfrdcsa/sandbox"
     mkdir /var/lib/myfrdcsa/sandbox
     chown -R $USER.$GROUP /var/lib/myfrdcsa/sandbox
-
+fi
+if ! [ -d "/var/lib/myfrdcsa/sandbox" ]; then
+    echo "ERROR: Didn't set up sandbox properly"
+    exit 1
 fi
 
 if ! [ -d "/var/lib/myfrdcsa/sandbox/opencyc-4.0/opencyc-4.0" ]; then
@@ -372,6 +390,11 @@ if ! [ -d "/var/lib/myfrdcsa/sandbox/opencyc-4.0/opencyc-4.0" ]; then
     cd /var/lib/myfrdcsa/sandbox/opencyc-4.0
     su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/opencyc-4.0 ."
 fi
+if ! [ -d "/var/lib/myfrdcsa/sandbox/opencyc-4.0/opencyc-4.0" ]; then
+    echo "ERROR: Didn't set up opencyc-4.0 properly"
+    exit 1
+fi
+
 
 # FIXME: do everything to properly install inline java
 # have JAVA_HOME correctly asserted
@@ -379,18 +402,40 @@ fi
 # INSTALL Inline::Java
 
 # # note if kbs2 isn't getting very far, try running this next line again
-if true; then
-    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies /var/lib/myfrdcsa/codebases/minor/spse/scripts/test-use.pl
-    /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules -f Text::Quote
-    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "/var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import do2.kbs"
 
+/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies /var/lib/myfrdcsa/codebases/minor/spse/scripts/test-use.pl
+/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules -f Text::Quote
+/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules -f Tk::GraphViz
 
-    cd /var/lib/myfrdcsa/codebases/minor/spse
-    # do something about having to constantly close the GUI to get
-    # this to work, add some kill switch inside or preinstall the
-    # modules.
-    /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W"
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts && install-script-dependencies \"./kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import do2.kbs\""
+
+# do something about having to constantly close the GUI to get
+# this to work, add some kill switch inside or preinstall the
+# modules.
+
+echo "Starting Test-use"
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse/scripts/ && install-script-dependencies ./test-use.pl"
+
+echo "Starting SPSE2"
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && install-script-dependencies \"spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W 10000\""
+
+# update this patch to work with the latest version of Tk::GraphViz
+# FIXME: copy the modified patch to the gitroot, along with other modifications
+cd /usr/local/share/perl
+if ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
+    patch -p0 -R -i /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
 fi
+if ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
+    echo "ERROR: couldn't patch Tk::GraphViz"
+    exit 1
+fi
+
+echo "Starting SPSE2"
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W 10000\""
+
+echo "Finishing for now";
+exit 1
+
 
 export TMP_PERL_MM_OPT=$PERL_MM_OPT
 export PERL_MM_OPT=
@@ -466,16 +511,10 @@ fi
 
 # # fix the username for this file, or fix the whole concept
 
-if [ ! -f "/etc/init.d/unilang" ]; then
-    cat /var/lib/myfrdcsa/codebases/internal/unilang/systems/etc/init.d/unilang | perl -pe "s/<USERNAME>/$USER/sg" > /etc/init.d/unilang
-    sudo chmod 755 /etc/init.d/unilang 
-    sudo update-rc.d unilang defaults
-fi
-
 # copy ?the?
 # add frdcsa-applet to the startup applications
 
-/etc/init.d/unilang restart
+
 
 # FIXME: run unilang tests and report on success
 
@@ -559,3 +598,7 @@ cd /var/lib/myfrdcsa/codebases/internal/clear && /var/lib/myfrdcsa/codebases/int
 # get academician
 # verber
 # install-script-dependencies /var/lib/myfrdcsa/codebases/internal/verber
+
+update-dlocatedb
+updatedb
+
