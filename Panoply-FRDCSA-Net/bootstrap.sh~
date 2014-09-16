@@ -1,8 +1,6 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash -v
 
-set -v
-
-export UPDATE_REPOS=true
+export UPDATE_REPOS=false
 
 export NONINTERACTIVE=true
 export PERL_MM_USE_DEFAULT=1
@@ -65,7 +63,7 @@ if [ $APT_UPDATED == 0 ]; then
     apt-get update
     export export APT_UPDATED=1
 fi
-apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip libb-utils-perl libcal-dav-perl libconfig-general-perl libdata-dump-streamer-perl libfile-slurp-perl libfile-which-perl libgetopt-declare-perl libgraph-perl libpadwalker-perl libproc-processtable-perl libstring-shellquote-perl libstring-similarity-perl libtask-weaken-perl libterm-readkey-perl libtie-ixhash-perl libtk-perl libunicode-map8-perl libunicode-string-perl libxml-atom-perl libxml-dumper-perl libxml-perl libxml-twig-perl libnet-telnet-perl
+apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip libb-utils-perl libcal-dav-perlW libconfig-general-perl libdata-dump-streamer-perl libfile-slurp-perl libfile-which-perl libgetopt-declare-perl libgraph-perl libpadwalker-perl libproc-processtable-perl libstring-shellquote-perl libstring-similarity-perl libtask-weaken-perl libterm-readkey-perl libtie-ixhash-perl libtk-perl libunicode-map8-perl libunicode-string-perl libxml-atom-perl libxml-dumper-perl libxml-perl libxml-twig-perl
 
 if ! dpkg -l | grep xclip | grep -q '^ii'; then
     echo "ERROR: first major group of packages did not install"
@@ -381,10 +379,6 @@ if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-ru
     echo "Starting UniLang"
 
 
-    # FIXME: not working, have to check for whatever processes, like
-    # cpan, cpanm or apt-get are running and if those are still
-    # running to delay longer
-
     # echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
     (sleep 10; /etc/init.d/unilang stop; killall start unilang unilang-client) &
 
@@ -557,7 +551,7 @@ fi
 sleep 5
 
 if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
-    su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts && NONINTERACTIVE=true install-script-dependencies \"./kbs2 -y -c Org::FRDCSA::Verber::PSEx2::Do fast-import /var/lib/myfrdcsa/codebases/minor/spse/kbs/do2.kbs\""
+    su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts && NONINTERACTIVE=true install-script-dependencies \"echo y | ./kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import /var/lib/myfrdcsa/codebases/minor/spse/kbs/do2.kbs\""
 fi
 if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
     echo "ERROR: Org::FRDCSA::Verber::PSEx2::Do did not load"
