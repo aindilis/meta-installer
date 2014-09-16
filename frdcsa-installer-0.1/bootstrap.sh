@@ -369,7 +369,7 @@ if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-ru
     # echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
     (sleep 10; /etc/init.d/unilang stop; killall start unilang unilang-client) &
 
-    while /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; do
+    while ! /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; do
 	(sleep 10; /etc/init.d/unilang stop; killall start unilang unilang-client) &
     done
 
@@ -469,8 +469,14 @@ fi
 export TMP_PERL_MM_OPT=$PERL_MM_OPT
 export PERL_MM_OPT=
 
+export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+
 if ! perldoc -l Inline::Java; then
-    cpanm --force Inline::Java
+    cd /tmp && tar xzf $DATA_DIR/frdcsa-misc/Inline-Java-0.53.tar.gz
+    cd Inline-Java-0.53
+    perl Makefile.PL J2SDK=$JAVA_HOME
+    make
+    make install    
 fi
 
 export PERL_MM_OPT=$TMP_PERL_MM_OPT
