@@ -652,7 +652,6 @@ su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && 
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss && NONINTERACTIVE=true install-script-dependencies \"./boss\""
 su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/internal/boss/data/namazu"
 
-# FIXME: do "boss etags"
 
 # sudo netstat -tulpn
 # start unilang
@@ -778,14 +777,24 @@ killall start unilang unilang-client
 
 # generally useful but optional
 
-echo "apt-file update"
 apt-file update
-
-echo "update-dlocatedb"
 update-dlocatedb
-
-echo "updatedb"
 updatedb
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss/ && ./boss updatedb"
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss/ && ./boss etags"
+
+# TODO
+
+# replace all instances of cpan installation with cpanm (including in
+# helper applications)
+
+# factor out a version of the install which primarily uses
+# install-script-dependencies in order to generate a more efficient
+# installer using apt-get and cpanm, in order to avoid installing
+# packages that are no longer required, and periodically build the
+# efficient installer.
+
+
 
 # FIXME: get the patch working
 
@@ -805,24 +814,5 @@ updatedb
 # verber
 # NONINTERACTIVE=true install-script-dependencies /var/lib/myfrdcsa/codebases/internal/verber
 
-# vagrant@panoply:/var/lib/myfrdcsa/codebases/internal/clear$ NONINTERACTIVE=true install-script-dependencies './cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W'
-# SCRIPT: <./cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W>
-# Nothing left to install, exiting!
-# vagrant@panoply:/var/lib/myfrdcsa/codebases/internal/clear$ ./cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W
-# Base class package "Net::DBus::Service" is empty.
-#     (Perhaps you need to 'use' the module which defines that package first,
-#     or make that module available in @INC (@INC contains: /etc/perl /usr/local/lib/perl/5.14.2 /usr/local/share/perl/5.14.2 /usr/lib/perl5 /usr/share/perl5 /usr/lib/perl/5.14 /usr/share/perl/5.14 /usr/local/lib/site_perl .).
-#  at /usr/share/perl5/BOSS/App/DBus/Object.pm line 3.
-# BEGIN failed--compilation aborted at /usr/share/perl5/BOSS/App/DBus/Object.pm line 3.
-# Compilation failed in require at /usr/share/perl5/BOSS/App/DBus.pm line 3.
-# BEGIN failed--compilation aborted at /usr/share/perl5/BOSS/App/DBus.pm line 3.
-# Compilation failed in require at /usr/share/perl5/Clear/Mod/GUI.pm line 3.
-# BEGIN failed--compilation aborted at /usr/share/perl5/Clear/Mod/GUI.pm line 3.
-# Compilation failed in require at /usr/share/perl5/Clear.pm line 4.
-# BEGIN failed--compilation aborted at /usr/share/perl5/Clear.pm line 4.
-# Compilation failed in require at ./cla line 3.
-# BEGIN failed--compilation aborted at ./cla line 3.
-
 echo "Finished FRDCSA Install"
-
 
