@@ -324,13 +324,13 @@ export PERL_MM_OPT=
 if ! perldoc -l File::Signature; then
     cpanm -f File::Signature
 fi
-
 export PERL_MM_OPT=$TMP_PERL_MM_OPT
 
 if ! perldoc -l File::Signature; then
     echo "ERROR: didn't install File::Signature correctly"
     exit 1
 fi
+
 
 if ! perldoc -l File::Stat; then
     # DONE: FIXME: manually install File::Stat
@@ -542,44 +542,63 @@ fi
 /etc/init.d/unilang start
 sleep 5
 
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts && install-script-dependencies \"./kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import /var/lib/myfrdcsa/codebases/minor/spse/kbs/do2.kbs\""
+if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
+    su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts && install-script-dependencies \"echo y | ./kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import /var/lib/myfrdcsa/codebases/minor/spse/kbs/do2.kbs\""
+fi
+if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
+    echo "ERROR: Org::FRDCSA::Verber::PSEx2::Do did not load"
+    exit 1
+fi
 
 # do something about having to constantly close the GUI to get
 # this to work, add some kill switch inside or preinstall the
 # modules.
 
-if ! kbs2 -l | grep -q Org::PICForm::PIC::Vis::Metadata; then
+if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::PICForm::PIC::Vis::Metadata; then
     cd /var/lib/myfrdcsa/codebases/minor/spse/kbs
-    /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -c Org::PICForm::PIC::Vis::Metadata fast-import metadata.kbs
+    echo y | /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -c Org::PICForm::PIC::Vis::Metadata fast-import metadata.kbs
 fi
-if ! kbs2 -l | grep -q Org::PICForm::PIC::Vis::Metadata; then
+if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::PICForm::PIC::Vis::Metadata; then
     echo "ERROR: Org::PICForm::PIC::Vis::Metadata did not load"
     exit 1
 fi
 
-if ! kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
-    cd /var/lib/myfrdcsa/codebases/minor/spse/kbs
-    /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import do2.kbs
-fi
-if ! kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
-    echo "ERROR: Org::PICForm::PIC::Vis::Metadata did not load"
-    exit 1
-fi
+# if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
+#     cd /var/lib/myfrdcsa/codebases/minor/spse/kbs
+#     echo y | /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import do2.kbs
+# fi
+# if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
+#     echo "ERROR: Org::FRDCSA::Verber::PSEx2::Do did not load"
+#     exit 1
+# fi
 
 echo "Starting Test-use"
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse/scripts/ && install-script-dependencies ./test-use.pl"
 
 echo "Starting SPSE2"
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && install-script-dependencies \"spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W 10000\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && XAUTHORITY=/home/$USER/.Xauthority install-script-dependencies \"spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W 10000\""
 
-# update this patch to work with the latest version of Tk::GraphViz
-# FIXME: copy the modified patch to the gitroot, along with other modifications
-cd /usr/local/share/perl
-if [ ! -f /usr/local/share/perl/5.18.1/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
-    patch -p0 -i /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
+# # update this patch to work with the latest version of Tk::GraphViz
+# # FIXME: copy the modified patch to the gitroot, along with other modifications
+# cd /usr/local/share/perl
+# if [ ! -f /usr/local/share/perl/5.18.1/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
+#     patch -p0 -i /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
+# fi
+# if [ ! -f /usr/local/share/perl/5.18.1/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
+#     echo "ERROR: couldn't patch Tk::GraphViz"
+#     exit 1
+# fi
+
+export TMP_PERL_MM_OPT=$PERL_MM_OPT
+export PERL_MM_OPT=
+
+if ! perldoc -l Tk::Month; then
+    cpanm -f Tk::Month
 fi
-if [ ! -f /usr/local/share/perl/5.18.1/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
-    echo "ERROR: couldn't patch Tk::GraphViz"
+export PERL_MM_OPT=$TMP_PERL_MM_OPT
+
+if ! perldoc -l Tk::Month; then
+    echo "ERROR: didn't install Tk::Month correctly"
     exit 1
 fi
 
@@ -651,7 +670,7 @@ chown $USER.$GROUP datasets
 
 # for workhorse
 if ! dpkg -l | grep uima-doc | grep -q '^ii'; then
-    sudo apt-get install -y liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils
+    apt-get install -y liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils
 fi
 if ! dpkg -l | grep uima-doc | grep -q '^ii'; then
     echo "ERROR: second major group of packages did not install"
@@ -701,7 +720,7 @@ su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/nlu/syst
 
 if ! dpkg -l | grep libwordnet-querydata-perl | grep -q '^ii'; then
     # /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WordNet::QueryData
-    sudo apt-get install -y wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival
+    apt-get install -y wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane
 fi
 if ! dpkg -l | grep libwordnet-querydata-perl | grep -q '^ii'; then
     echo "ERROR: third major group of packages did not install"
@@ -728,8 +747,14 @@ echo "Stopping UniLang"
 killall start unilang unilang-client
 
 # generally useful but optional
+
+echo "apt-file update"
 apt-file update
+
+echo "update-dlocatedb"
 update-dlocatedb
+
+echo "updatedb"
 updatedb
 
 # # now need to copy over all files related to getting various
