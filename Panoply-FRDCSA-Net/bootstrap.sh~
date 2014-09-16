@@ -67,7 +67,7 @@ if [ $APT_UPDATED == 0 ]; then
     apt-get update
     export export APT_UPDATED=1
 fi
-apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip libb-utils-perl libcal-dav-perl libconfig-general-perl libdata-dump-streamer-perl libfile-slurp-perl libfile-which-perl libgetopt-declare-perl libgraph-perl libpadwalker-perl libproc-processtable-perl libstring-shellquote-perl libstring-similarity-perl libtask-weaken-perl libterm-readkey-perl libtie-ixhash-perl libtk-perl libunicode-map8-perl libunicode-string-perl libxml-atom-perl libxml-dumper-perl libxml-perl libxml-twig-perl libnet-telnet-perl liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane libevent-perl libfile-pid-perl
+apt-get install -y build-essential git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip libb-utils-perl libcal-dav-perl libconfig-general-perl libdata-dump-streamer-perl libfile-slurp-perl libfile-which-perl libgetopt-declare-perl libgraph-perl libpadwalker-perl libproc-processtable-perl libstring-shellquote-perl libstring-similarity-perl libtask-weaken-perl libterm-readkey-perl libtie-ixhash-perl libtk-perl libunicode-map8-perl libunicode-string-perl libxml-atom-perl libxml-dumper-perl libxml-perl libxml-twig-perl libnet-telnet-perl liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane libevent-perl libfile-pid-perl
 
 if ! dpkg -l | grep wamerican-insane | grep -q '^ii'; then
     echo "ERROR: first major group of packages did not install"
@@ -333,13 +333,11 @@ fi
 export TMP_PERL_MM_OPT=$PERL_MM_OPT
 export PERL_MM_OPT=
 
-if ! perldoc -l Try::Tiny; then
-    cpanm Try::Tiny Path::Class ExtUtils::CBuilder Crypt::SSLeay RPC::XML Module::Load RPC::XML ExtUtils::MakeMaker PPI File::Remove Test::Object Test::NoWarnings Test::Tester Test::NoWarnings Test::SubCalls Hook::LexWrap Test::SubCalls IO::String Clone Class::Inspector PPI Data::SExpression Test::Deep Data::SExpression Data::URIEncode Lingua::EN::Sentence X11::WMCtrl Mail::Box IO::stringy Object::Realize::Later Test::Pod Digest::HMAC User::Identity MIME::Types Devel::GlobalDestruction Sub::Exporter::Progressive Devel::GlobalDestruction Mail::Box Ubigraph Frontier::RPC Ubigraph Net::Google::Calendar DateTime::Format::ICal DateTime::Event::ICal DateTime::Event::Recurrence DateTime::Set Set::Infinite DateTime::Set DateTime::Event::Recurrence DateTime::Event::ICal DateTime::Format::ICal Net::Google::AuthSub Date::ICal Date::Leapyear Date::ICal Net::Google
-fi
+cpanm Try::Tiny Path::Class ExtUtils::CBuilder Crypt::SSLeay RPC::XML Module::Load RPC::XML ExtUtils::MakeMaker PPI File::Remove Test::Object Test::NoWarnings Test::Tester Test::NoWarnings Test::SubCalls Hook::LexWrap Test::SubCalls IO::String Clone Class::Inspector PPI Data::SExpression Test::Deep Data::SExpression Data::URIEncode Lingua::EN::Sentence X11::WMCtrl Mail::Box IO::stringy Object::Realize::Later Test::Pod Digest::HMAC User::Identity MIME::Types Devel::GlobalDestruction Sub::Exporter::Progressive Devel::GlobalDestruction Mail::Box Ubigraph Frontier::RPC Ubigraph Net::Google::Calendar DateTime::Format::ICal DateTime::Event::ICal DateTime::Event::Recurrence DateTime::Set Set::Infinite DateTime::Set DateTime::Event::Recurrence DateTime::Event::ICal DateTime::Format::ICal Net::Google::AuthSub Date::ICal Date::Leapyear Date::ICal Net::Google # Net::SSL Crypt::SSLeay
 
 export PERL_MM_OPT=$TMP_PERL_MM_OPT
 
-if ! perldoc -l Try::Tiny; then
+if ! perldoc -l Crypt::SSLeay; then
     echo "ERROR: CPANM modules did not install"
     exit 1
 fi
@@ -379,12 +377,14 @@ fi
 
 # /etc/init.d/unilang restart
 
+echo "STARTING INSTALLATION OF UNILANG: PROCESS IS CONFUSING, PLEASE WAIT UP TO 15 MINUTES FOR IT TO COMPLETE (until you see 'INSTALLATION OF UNILANG COMPLETE')"
+
 echo "Stopping UniLang in case it was already running from a previous run of the provisioning script"
 /etc/init.d/unilang stop
 killall start unilang unilang-client
 
 export UNILANG_START_DURATION=5
-export UNILANG_INSTALL_SLEEP_DURATION=35
+export UNILANG_INSTALL_SLEEP_DURATION=60
 let UNILANG_INSTALL_SLEEP_DURATION_PLUS_WAIT=$UNILANG_INSTALL_SLEEP_DURATION+5
 export UNILANG_INSTALL_SLEEP_DURATION_PLUS_WAIT
 
@@ -428,7 +428,7 @@ else
     killall start unilang unilang-client
 fi
 
-echo "UniLang is currently installed"
+echo "INSTALLATION OF UNILANG COMPLETE"
 
 echo "UniLang starting up again to install subsequent agents"
 /etc/init.d/unilang start
@@ -481,10 +481,6 @@ fi
 # have JAVA_HOME correctly asserted
 
 # INSTALL Inline::Java
-
-# # note if kbs2 isn't getting very far, try running this next line again
-
-# /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules -f Text::Quote
 
 export TMP_PERL_MM_OPT=$PERL_MM_OPT
 export PERL_MM_OPT=
