@@ -65,9 +65,9 @@ if [ $APT_UPDATED == 0 ]; then
     apt-get update
     export export APT_UPDATED=1
 fi
-apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip libb-utils-perl libcal-dav-perl libconfig-general-perl libdata-dump-streamer-perl libfile-slurp-perl libfile-which-perl libgetopt-declare-perl libgraph-perl libpadwalker-perl libproc-processtable-perl libstring-shellquote-perl libstring-similarity-perl libtask-weaken-perl libterm-readkey-perl libtie-ixhash-perl libtk-perl libunicode-map8-perl libunicode-string-perl libxml-atom-perl libxml-dumper-perl libxml-perl libxml-twig-perl libnet-telnet-perl
+apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip libb-utils-perl libcal-dav-perl libconfig-general-perl libdata-dump-streamer-perl libfile-slurp-perl libfile-which-perl libgetopt-declare-perl libgraph-perl libpadwalker-perl libproc-processtable-perl libstring-shellquote-perl libstring-similarity-perl libtask-weaken-perl libterm-readkey-perl libtie-ixhash-perl libtk-perl libunicode-map8-perl libunicode-string-perl libxml-atom-perl libxml-dumper-perl libxml-perl libxml-twig-perl libnet-telnet-perl liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane libevent-perl
 
-if ! dpkg -l | grep xclip | grep -q '^ii'; then
+if ! dpkg -l | grep wamerican-insane | grep -q '^ii'; then
     echo "ERROR: first major group of packages did not install"
     exit 1
 fi
@@ -331,6 +331,20 @@ fi
 export TMP_PERL_MM_OPT=$PERL_MM_OPT
 export PERL_MM_OPT=
 
+if ! perldoc -l Try::Tiny; then
+    cpanm Try::Tiny Path::Class ExtUtils::CBuilder Crypt::SSLeay RPC::XML Module::Load RPC::XML ExtUtils::MakeMaker PPI File::Remove Test::Object Test::NoWarnings Test::Tester Test::NoWarnings Test::SubCalls Hook::LexWrap Test::SubCalls IO::String Clone Class::Inspector PPI Data::SExpression Test::Deep Data::SExpression Data::URIEncode Lingua::EN::Sentence X11::WMCtrl Mail::Box IO::stringy Object::Realize::Later Test::Pod Digest::HMAC User::Identity MIME::Types Devel::GlobalDestruction Sub::Exporter::Progressive Devel::GlobalDestruction Mail::Box Ubigraph Frontier::RPC Ubigraph Net::Google::Calendar DateTime::Format::ICal DateTime::Event::ICal DateTime::Event::Recurrence DateTime::Set Set::Infinite DateTime::Set DateTime::Event::Recurrence DateTime::Event::ICal DateTime::Format::ICal Net::Google::AuthSub Date::ICal Date::Leapyear Date::ICal Net::Google
+fi
+
+export PERL_MM_OPT=$TMP_PERL_MM_OPT
+
+if ! perldoc -l Try::Tiny; then
+    echo "ERROR: CPANM modules did not install"
+    exit 1
+fi
+
+export TMP_PERL_MM_OPT=$PERL_MM_OPT
+export PERL_MM_OPT=
+
 if ! perldoc -l File::Signature; then
     cpanm -f File::Signature
 fi
@@ -386,10 +400,10 @@ if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-ru
     # running to delay longer
 
     # echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
-    (sleep 10; /etc/init.d/unilang stop; killall start unilang unilang-client) &
+    (sleep 30; /etc/init.d/unilang stop; killall start unilang unilang-client) &
 
     while ! NONINTERACTIVE=true /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; do
-	(sleep 10; /etc/init.d/unilang stop; killall start unilang unilang-client) &
+	(sleep 30; /etc/init.d/unilang stop; killall start unilang unilang-client) &
     done
 
     sleep 11
@@ -682,18 +696,6 @@ cd /var/lib/myfrdcsa/
 mkdir -p datasets
 chown $USER.$GROUP datasets
 
-# for workhorse
-if [ $APT_UPDATED == 0 ]; then
-    apt-get update
-    export export APT_UPDATED=1
-fi
-apt-get install -y liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane
-
-if ! dpkg -l | grep uima-doc | grep -q '^ii'; then
-    echo "ERROR: second major group of packages did not install"
-    exit 1
-fi
-
 su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/minor/corpus-manager/data/corpora/gutenberg"
 
 if [ ! -d "/usr/local/include/link-grammar" ]; then
@@ -736,31 +738,12 @@ fi
 
 # FIXME: do we need to add a cabinet here?
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/paperless-office && NONINTERACTIVE=true install-script-dependencies \"./paperless-office -W\""
-
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Module::Build"
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WWW::Mechanize::Cached"
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Yahoo::Search"
-
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/workhorse/scripts/ && NONINTERACTIVE=true install-script-dependencies \"./process-corpus.pl -W\""
-
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Archive::Zip"
-
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation && NONINTERACTIVE=true install-script-dependencies \"./process-2.pl -W\""
-
-
-# if ! dpkg -l | grep libwordnet-querydata-perl | grep -q '^ii'; then
-#    if [ $APT_UPDATED == 0 ]; then
-#	apt-get update
-#	export export APT_UPDATED=1
-#    fi
-#     # /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WordNet::QueryData
-#     apt-get install -y wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane
-# fi
-# if ! dpkg -l | grep libwordnet-querydata-perl | grep -q '^ii'; then
-#     echo "ERROR: third major group of packages did not install"
-#     exit 1
-# fi    
-
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/corpus && NONINTERACTIVE=true install-script-dependencies \"./corpus -h\""
 
 

@@ -1,0 +1,746 @@
+vagrant provision
+==> default: Running provisioner: shell...
+    default: Running: /tmp/vagrant-shell20140916-15853-5zyo5m.sh
+==> default: stdin: is not a tty
+==> default: export UPDATE_REPOS=true
+==> default: export NONINTERACTIVE=true
+==> default: export PERL_MM_USE_DEFAULT=1
+==> default: export PRIVATE_INSTALL=false
+==> default: export THE_SOURCE="/var/lib/myfrdcsa/codebases/releases/myfrdcsa-0.1/myfrdcsa-0.1/frdcsa.bashrc"
+==> default: # FIXME: make the installer idempotent
+==> default: export INSTALL_TO_VAGRANT=true
+==> default: export INSTALL_TO_HOST=false
+==> default: if [[ $INSTALL_TO_VAGRANT == true && $INSTALL_TO_HOST == true ]] ||
+==> default:     [[ $INSTALL_TO_VAGRANT == false && $INSTALL_TO_HOST == false ]]; then
+==> default:     echo "ERROR: Currently only one must be true at a time of INSTALL_TO_VAGRANT and INSTALL_TO_HOST"
+==> default:     exit 1
+==> default: fi
+==> default: if $INSTALL_TO_VAGRANT == true; then
+==> default:     export USER="vagrant"
+==> default:     export GROUP="vagrant"
+==> default:     export DATA_DIR="/vagrant/data"
+==> default: elif $INSTALL_TO_HOST == true; then
+==> default:     export USER="andrewdo"
+==> default:     export GROUP="andrewdo"
+==> default:     export DATA_DIR="/home/$USER/frdcsa-installer/data"
+==> default:     if ! [ -d "/home/$USER" ]; then
+==> default: 	adduser $USER
+==> default:     fi
+==> default: fi
+==> default: 
+==> default: 
+==> default: # setup a secure .ssh environment
+==> default: 
+==> default: if $INSTALL_TO_VAGRANT == true; then
+==> default:     if [ ! -d /home/vagrant/.ssh.old ]; then
+==> default: 	mv /home/vagrant/.ssh /home/vagrant/.ssh.old
+==> default: 	mkdir -p /home/vagrant/.ssh
+==> default: 	chmod 700 /home/vagrant/.ssh
+==> default: 	chown -R vagrant.vagrant /home/vagrant/.ssh
+==> default:     fi
+==> default: elif $INSTALL_TO_HOST == true; then
+==> default:     echo nothing to do for now
+==> default: fi
+==> default: 
+==> default: # setup a proper sources.list
+==> default: if $INSTALL_TO_VAGRANT == true; then
+==> default:     # cp $DATA_DIR/sources.list /etc/apt
+==> default: 
+==> default:     # FIXME: add something here to make it idempotent
+==> default:     if ! grep -q 'andrewdo@justin' /home/$USER/.ssh/authorized_keys; then
+==> default: 	cat $DATA_DIR/id_rsa.pub >> /home/$USER/.ssh/authorized_keys
+==> default:     fi
+==> default: fi
+==> default: 
+==> default: export APT_UPDATED=0
+==> default: 
+==> default: if [ $APT_UPDATED == 0 ]; then
+==> default:     apt-get update
+==> default:     export export APT_UPDATED=1
+==> default: fi
+==> default: Hit http://apt.puppetlabs.com wheezy Release.gpg
+==> default: Hit http://apt.puppetlabs.com wheezy Release
+==> default: Get:1 http://security.debian.org wheezy/updates Release.gpg [836 B]
+==> default: Get:2 http://security.debian.org wheezy/updates Release [102 kB]
+==> default: Hit http://apt.puppetlabs.com wheezy/main Sources
+==> default: Hit http://apt.puppetlabs.com wheezy/dependencies Sources
+==> default: Hit http://apt.puppetlabs.com wheezy/main amd64 Packages
+==> default: Hit http://apt.puppetlabs.com wheezy/dependencies amd64 Packages
+==> default: Get:3 http://security.debian.org wheezy/updates/main Sources [127 kB]
+==> default: Get:4 http://security.debian.org wheezy/updates/main amd64 Packages [215 kB]
+==> default: Get:5 http://security.debian.org wheezy/updates/main Translation-en [121 kB]
+==> default: Ign http://apt.puppetlabs.com wheezy/dependencies Translation-en_US
+==> default: Ign http://apt.puppetlabs.com wheezy/dependencies Translation-en
+==> default: Ign http://apt.puppetlabs.com wheezy/main Translation-en_US
+==> default: Ign http://apt.puppetlabs.com wheezy/main Translation-en
+==> default: Hit http://http.debian.net wheezy Release.gpg
+==> default: Hit http://http.debian.net wheezy-updates Release.gpg
+==> default: Hit http://http.debian.net wheezy Release
+==> default: Hit http://http.debian.net wheezy-updates Release
+==> default: Hit http://http.debian.net wheezy/main Sources
+==> default: Hit http://http.debian.net wheezy/main amd64 Packages
+==> default: Hit http://http.debian.net wheezy/main Translation-en
+==> default: Hit http://http.debian.net wheezy-updates/main Sources
+==> default: Hit http://http.debian.net wheezy-updates/main amd64 Packages/DiffIndex
+==> default: Hit http://http.debian.net wheezy-updates/main Translation-en/DiffIndex
+==> default: Fetched 566 kB in 11s (48.6 kB/s)
+==> default: Reading package lists...
+==> default: apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip libb-utils-perl libcal-dav-perl libconfig-general-perl libdata-dump-streamer-perl libfile-slurp-perl libfile-which-perl libgetopt-declare-perl libgraph-perl libpadwalker-perl libproc-processtable-perl libstring-shellquote-perl libstring-similarity-perl libtask-weaken-perl libterm-readkey-perl libtie-ixhash-perl libtk-perl libunicode-map8-perl libunicode-string-perl libxml-atom-perl libxml-dumper-perl libxml-perl libxml-twig-perl libnet-telnet-perl
+==> default: Reading package lists...
+==> default: Building dependency tree...
+==> default: Reading state information...
+==> default: apg is already the newest version.
+==> default: apt-file is already the newest version.
+==> default: bbdb is already the newest version.
+==> default: chase is already the newest version.
+==> default: cpanminus is already the newest version.
+==> default: dlocate is already the newest version.
+==> default: emacs is already the newest version.
+==> default: git is already the newest version.
+==> default: libb-utils-perl is already the newest version.
+==> default: libcal-dav-perl is already the newest version.
+==> default: libclass-methodmaker-perl is already the newest version.
+==> default: libconfig-general-perl is already the newest version.
+==> default: libdata-dump-streamer-perl is already the newest version.
+==> default: libfile-slurp-perl is already the newest version.
+==> default: libfile-which-perl is already the newest version.
+==> default: libgetopt-declare-perl is already the newest version.
+==> default: libgraph-perl is already the newest version.
+==> default: libnet-telnet-perl is already the newest version.
+==> default: libpadwalker-perl is already the newest version.
+==> default: libproc-processtable-perl is already the newest version.
+==> default: libstring-shellquote-perl is already the newest version.
+==> default: libstring-similarity-perl is already the newest version.
+==> default: libtask-weaken-perl is already the newest version.
+==> default: libterm-readkey-perl is already the newest version.
+==> default: libtie-ixhash-perl is already the newest version.
+==> default: libunicode-map8-perl is already the newest version.
+==> default: libunicode-string-perl is already the newest version.
+==> default: libxml-atom-perl is already the newest version.
+==> default: libxml-dumper-perl is already the newest version.
+==> default: libxml-perl is already the newest version.
+==> default: libxml-twig-perl is already the newest version.
+==> default: liblink-grammar4 is already the newest version.
+==> default: liblink-grammar4-dev is already the newest version.
+==> default: link-grammar is already the newest version.
+==> default: mew is already the newest version.
+==> default: namazu2 is already the newest version.
+==> default: namazu2-index-tools is already the newest version.
+==> default: nmap is already the newest version.
+==> default: perl-doc is already the newest version.
+==> default: perl-tk is already the newest version.
+==> default: screen is already the newest version.
+==> default: super is already the newest version.
+==> default: w3m-el is already the newest version.
+==> default: x11-apps is already the newest version.
+==> default: xclip is already the newest version.
+==> default: libxml2-dev is already the newest version.
+==> default: openjdk-7-jdk is already the newest version.
+==> default: libssl-dev is already the newest version.
+==> default: 0 upgraded, 0 newly installed, 0 to remove and 12 not upgraded.
+==> default: 
+==> default: if ! dpkg -l | grep xclip | grep -q '^ii'; then
+==> default:     echo "ERROR: first major group of packages did not install"
+==> default:     exit 1
+==> default: fi
+==> default: 
+==> default: 
+==> default: if ! dpkg -l | grep -E 'mysql-server-[0-9]+' | grep -q '^ii'; then
+==> default:     
+==> default: 
+==> default:     # FIXME: add something here to abort installation if it detects that it will remove any packages
+==> default:     
+==> default:     
+==> default: 
+==> default:     # http://stackoverflow.com/questions/1202347/how-can-i-pass-a-password-from-a-bash-script-to-aptitude-for-installing-mysql
+==> default: 
+==> default:     # emacs install twittering-mode, ert
+==> default: 
+==> default:     if [ ! -x "/etc/myfrdcsa/config/perllib" ]; then
+==> default: 	mkdir -p /etc/myfrdcsa/config/
+==> default: 	# FIXME have it write the mysql password to /etc/myfrdcsa/config/perllib
+==> default: 	apg -n 1 -m 16 > /etc/myfrdcsa/config/perllib
+==> default: 	chown $USER.$GROUP /etc/myfrdcsa/config/perllib
+==> default: 	chmod 600 /etc/myfrdcsa/config/perllib
+==> default:     fi
+==> default: 
+==> default:     export PASS=`cat /etc/myfrdcsa/config/perllib`
+==> default: 
+==> default:     export DEBIAN_FRONTEND=noninteractive
+==> default: 
+==> default:     # debconf-set-selections <<< "mysql-server-5.1 mysql-server/root_password password $PASS"
+==> default:     # debconf-set-selections <<< "mysql-server-5.1 mysql-server/root_password_again password $PASS"
+==> default: 
+==> default:     if [ $APT_UPDATED == 0 ]; then
+==> default: 	apt-get update
+==> default: 	export export APT_UPDATED=1
+==> default:     fi
+==> default:     apt-get -q -y install mysql-server mysql-client
+==> default: 
+==> default:     echo "Give mysql server time to start up before we try to set a password..."
+==> default:     sleep 5
+==> default: 
+==> default:     mysql -uroot <<EOF
+==> default: UPDATE mysql.user SET Password=PASSWORD('$PASS') WHERE User='root'; FLUSH PRIVILEGES;
+==> default: EOF
+==> default: 
+==> default:     # echo "Give mysql server time to start up before we try to set a password..."
+==> default:     # sleep 5
+==> default:     # mysql -uroot -e <<EOF
+==> default:     # EOSQL "UPDATE mysql.user SET Password=PASSWORD('$PASS') WHERE User='root'; FLUSH PRIVILEGES;"
+==> default:     # EOSQL
+==> default:     # echo "Done setting mysql password."
+==> default:     # EOF
+==> default: 
+==> default:     unset DEBIAN_FRONTEND
+==> default: fi
+==> default: 
+==> default: if [ ! -d "/var/lib/myfrdcsa/codebases" ]; then
+==> default:     mkdir -p /var/lib/myfrdcsa/codebases
+==> default:     chown -R $USER.$GROUP /var/lib/myfrdcsa
+==> default: fi
+==> default: 
+==> default: cd /var/lib/myfrdcsa/codebases
+==> default: 
+==> default: if ! grep -q "Host posi.frdcsa.org" /home/$USER/.ssh/config; then
+==> default:     echo -e "Host posi.frdcsa.org\n\tStrictHostKeyChecking no\n" >> /home/$USER/.ssh/config
+==> default:     chown $USER.$GROUP /home/$USER/.ssh/authorized_keys /home/$USER/.ssh/config
+==> default:     cp $DATA_DIR/frdcsa_git_id_rsa /home/$USER/.ssh/id_rsa
+==> default:     chown $USER.$GROUP /home/$USER/.ssh/id_rsa
+==> default:     chmod 600 /home/$USER/.ssh/id_rsa
+==> default: fi
+==> default: /var/lib/myfrdcsa/codebases/releases /var/lib/myfrdcsa/codebases
+==> default: 
+==> default: if [ ! -d "/var/lib/myfrdcsa/codebases/releases" ]; then
+==> default:     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/releases"
+==> default: else
+==> default:     if [ $UPDATE_REPOS == true ]; then
+==> default: 	pushd /var/lib/myfrdcsa/codebases/releases
+==> default: 	su $USER -c "git pull"
+==> default: 	popd
+==> default:     fi
+==> default: fi
+==> default: Already up-to-date.
+==> default: /var/lib/myfrdcsa/codebases
+==> default: /var/lib/myfrdcsa/codebases/minor /var/lib/myfrdcsa/codebases
+==> default: if [ ! -d "/var/lib/myfrdcsa/codebases/releases" ]; then
+==> default:     echo "ERROR: Didn't check out /var/lib/myfrdcsa/codebases/releases"
+==> default:     exit 1
+==> default: fi
+==> default: 
+==> default: if [ ! -d "/var/lib/myfrdcsa/codebases/minor" ]; then
+==> default:     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/minor"
+==> default: else
+==> default:     if [ $UPDATE_REPOS == true ]; then
+==> default: 	pushd /var/lib/myfrdcsa/codebases/minor
+==> default: 	su $USER -c "git pull"
+==> default: 	popd
+==> default:     fi
+==> default: fi
+==> default: Already up-to-date.
+==> default: /var/lib/myfrdcsa/codebases
+==> default: /home/vagrant/.myconfig /home/vagrant
+==> default: if [ ! -d "/var/lib/myfrdcsa/codebases/minor" ]; then
+==> default:     echo "ERROR: Didn't check out /var/lib/myfrdcsa/codebases/minor"
+==> default:     exit 1
+==> default: fi
+==> default: 
+==> default: cd /home/$USER
+==> default: 
+==> default: if [ ! -d "/home/$USER/.myconfig" ]; then
+==> default:     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/.myconfig"
+==> default: else
+==> default:     if [ $UPDATE_REPOS == true ]; then
+==> default: 	pushd /home/$USER/.myconfig
+==> default: 	su $USER -c "git pull"
+==> default: 	popd
+==> default:     fi
+==> default: fi
+==> default: Already up-to-date.
+==> default: /home/vagrant
+==> default: if [ ! -d "/home/$USER/.myconfig" ]; then
+==> default:     echo "ERROR: Didn't check out /home/$USER/.myconfig"
+==> default:     exit 1
+==> default: fi
+==> default: 
+==> default: export DATETIMESTAMP=`date "+%Y%m%d%H%M%S"`
+==> default: date "+%Y%m%d%H%M%S"
+==> default: 
+==> default: if ! grep myfrdcsa .bashrc; then
+==> default:     mv /home/$USER/.bashrc /home/$USER/.bashrc.$DATETIMESTAMP
+==> default:     mv /home/$USER/.emacs.d /home/$USER/.emacs.d.$DATETIMESTAMP
+==> default:     su $USER -c "/home/$USER/.myconfig/bin/install-myconfig.pl"
+==> default: fi
+==> default: source /var/lib/myfrdcsa/codebases/internal/myfrdcsa/frdcsa.bashrc
+==> default: if ! grep myfrdcsa .bashrc; then
+==> default:     echo "ERROR: Didn't install /home/$USER/.myconfig correctly"
+==> default:     exit 1
+==> default: fi
+==> default: source /var/lib/myfrdcsa/codebases/internal/myfrdcsa/frdcsa.bashrc
+==> default: /home/vagrant/.config/frdcsa-public /home/vagrant
+==> default: 
+==> default: if [ ! -d "/var/lib/myfrdcsa/codebases/internal" ]; then
+==> default:     # run the script for updating the perl links
+==> default:     su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/internal/"
+==> default:     su $USER -c "/var/lib/myfrdcsa/codebases/releases/myfrdcsa-0.1/myfrdcsa-0.1/scripts/gen-internal-links.pl"
+==> default: fi
+==> default: if [ ! -h "/var/lib/myfrdcsa/codebases/internal/myfrdcsa" ]; then
+==> default:     echo "ERROR: gen internal links failed, exiting."
+==> default:     exit 1
+==> default: fi
+==> default: 
+==> default: if [ ! -h "/usr/share/perl5/MyFRDCSA" ]; then
+==> default:     /var/lib/myfrdcsa/codebases/internal/myfrdcsa/scripts/gen-perl-links.pl
+==> default: fi
+==> default: if [ ! -h "/usr/share/perl5/MyFRDCSA" ]; then
+==> default:     echo "ERROR: gen perl links failed, exiting."
+==> default:     exit 1
+==> default: fi
+==> default: 
+==> default: if [ ! -x "/root/.cpan" ]; then
+==> default:     # setup CPAN
+==> default:     # have it configure it by default
+==> default:     # FIXME: switch to cpanm
+==> default:     cpan -J
+==> default: fi
+==> default: if [ ! -x "/root/.cpan" ]; then
+==> default:     echo "ERROR: didn't configure CPAN."
+==> default:     exit 1
+==> default: fi
+==> default: 
+==> default: if [ ! -d "/var/lib/myfrdcsa/codebases/data/" ]; then
+==> default:     su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/data/"
+==> default:     # create all the data dirs as required
+==> default:     su $USER -c "/var/lib/myfrdcsa/codebases/internal/myfrdcsa/scripts/gen-data-dirs.pl"
+==> default: fi
+==> default: if [ ! -d "/var/lib/myfrdcsa/codebases/data/" ]; then
+==> default:     echo "ERROR: gen data dirs failed, exiting."
+==> default:     exit 1
+==> default: fi
+==> default: 
+==> default: if $PRIVATE_INSTALL; then
+==> default:     if [ ! -h /home/$USER/.config/frdcsa ]; then
+==> default: 	cd /home/$USER
+==> default: 	mkdir -p .config
+==> default: 	chown $USER.$GROUP .config
+==> default: 	cd .config
+==> default: 	su $USER -c "git clone ssh://andrewdo@192.168.1.220/gitroot/frdcsa-private"
+==> default: 	ln -s frdcsa-private frdcsa
+==> default:     else
+==> default: 	if [ $UPDATE_REPOS == true ]; then
+==> default: 	    pushd /home/$USER/.config/frdcsa-private
+==> default: 	    su $USER -c "git pull"
+==> default: 	    popd
+==> default: 	fi
+==> default:     fi
+==> default:     if [ ! -h /home/$USER/.config/frdcsa ]; then
+==> default: 	echo "ERROR: didn't checkout /home/$USER/.config/frdcsa properly, exiting."
+==> default: 	exit 1
+==> default:     fi
+==> default: else
+==> default:     if [ ! -h /home/$USER/.config/frdcsa ]; then
+==> default: 	cd /home/$USER
+==> default: 	mkdir -p .config
+==> default: 	chown $USER.$GROUP .config
+==> default: 	cd .config
+==> default: 	su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/frdcsa-public"
+==> default: 	ln -s frdcsa-public frdcsa
+==> default:     else
+==> default: 	if [ $UPDATE_REPOS == true ]; then
+==> default: 	    pushd /home/$USER/.config/frdcsa-public
+==> default: 	    su $USER -c "git pull"
+==> default: 	    popd
+==> default: 	fi
+==> default:     fi
+==> default:     if [ ! -h /home/$USER/.config/frdcsa ]; then
+==> default: 	echo "ERROR: didn't checkout /home/$USER/.config/frdcsa properly, exiting."
+==> default: 	exit 1
+==> default:     fi
+==> default: fi
+==> default: Already up-to-date.
+==> default: /home/vagrant
+==> default: /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups/mysql-backup /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups
+==> default: 
+==> default: cd /var/lib/myfrdcsa/codebases/internal/kbfs/data
+==> default: 
+==> default: if [ ! -d "/var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups" ]; then
+==> default:     su $USER -c "mkdir /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups"
+==> default: fi
+==> default: if [ ! -d "/var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups" ]; then
+==> default:     echo "ERROR: didn't make /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups properly, exiting."
+==> default:     exit 1
+==> default: fi
+==> default: 
+==> default: cd /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups
+==> default: 
+==> default: if [ ! -d "/var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups/mysql-backup" ]; then
+==> default:     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/mysql-backup"
+==> default: else
+==> default:     if [ $UPDATE_REPOS == true ]; then
+==> default: 	pushd /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups/mysql-backup
+==> default: 	su $USER -c "git pull"
+==> default: 	popd
+==> default:     fi
+==> default: fi
+==> default: Already up-to-date.
+==> default: /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups
+==> default: if ! [ -d "/var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups/mysql-backup" ]; then
+==> default:     echo "ERROR: failed to clone mysql-backup, exiting."
+==> default:     exit 1
+==> default: fi
+==> default: 
+==> default: export TEMP_IDENTIFIER=`cat /etc/myfrdcsa/config/perllib`
+==> default: cat /etc/myfrdcsa/config/perllib
+==> default: cd mysql-backup
+==> default: if ! echo show databases | mysql -u root --password="$TEMP_IDENTIFIER" | grep unilang; then
+==> default:     for it in `ls -1 *.sql | sed -e 's/\.sql//'`; do
+==> default: 	echo $it ; 
+==> default: 	echo "create database \`$it\`;" | mysql -u root --password="$TEMP_IDENTIFIER" ; 
+==> default: 	cat $it.sql | mysql -u root --password="$TEMP_IDENTIFIER" $it ; 
+==> default:     done
+==> default: fi
+==> default: sayer_unilang_webservice
+==> default: unilang
+==> default: if ! echo show databases | mysql -u root --password="$TEMP_IDENTIFIER" | grep unilang; then
+==> default:     echo "ERROR: databases apparently didn't load"
+==> default:     exit 1
+==> default: fi
+==> default: sayer_unilang_webservice
+==> default: unilang
+==> default: 
+==> default: if [ ! -d "$DATA_DIR/frdcsa-misc/etc" ]; then
+==> default:     cd $DATA_DIR
+==> default:     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/frdcsa-misc"
+==> default: else
+==> default:     if [ $UPDATE_REPOS == true ]; then
+==> default: 	pushd $DATA_DIR/frdcsa-misc
+==> default: 	su $USER -c "git pull"
+==> default: 	popd
+==> default:     fi
+==> default: fi
+==> default: /vagrant/data/frdcsa-misc /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups/mysql-backup
+==> default: Already up-to-date.
+==> default: /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups/mysql-backup
+==> default: if [ ! -d "$DATA_DIR/frdcsa-misc/etc" ]; then
+==> default:     echo "ERROR: didn't checkout frdcsa-misc properly"
+==> default:     exit 1
+==> default: fi
+==> default: 
+==> default: export TMP_PERL_MM_OPT=$PERL_MM_OPT
+==> default: export PERL_MM_OPT=
+==> default: 
+==> default: if ! perldoc -l File::Signature; then
+==> default:     cpanm -f File::Signature
+==> default: fi
+==> default: /usr/local/share/perl/5.14.2/File/Signature.pm
+==> default: export PERL_MM_OPT=$TMP_PERL_MM_OPT
+==> default: 
+==> default: if ! perldoc -l File::Signature; then
+==> default:     echo "ERROR: didn't install File::Signature correctly"
+==> default:     exit 1
+==> default: fi
+==> default: /usr/local/share/perl/5.14.2/File/Signature.pm
+==> default: 
+==> default: 
+==> default: if ! perldoc -l File::Stat; then
+==> default:     # DONE: FIXME: manually install File::Stat
+==> default:     cd /tmp && tar xzf $DATA_DIR/frdcsa-misc/File-Stat-0.01.tar.gz 
+==> default:     cd File-Stat-0.01/
+==> default:     perl Makefile.PL
+==> default:     make
+==> default:     make install
+==> default: fi
+==> default: /usr/local/share/perl/5.14.2/File/Stat.pm
+==> default: if ! perldoc -l File::Stat; then
+==> default:     echo "ERROR: didn't install File::Stat correctly"
+==> default:     exit 1
+==> default: fi
+==> default: /usr/local/share/perl/5.14.2/File/Stat.pm
+==> default: Stopping UniLang
+==> default: 
+==> default: if [ ! -f "/etc/init.d/unilang" ]; then
+==> default:     cat /var/lib/myfrdcsa/codebases/internal/unilang/systems/etc/init.d/unilang | perl -pe "s/<USERNAME>/$USER/sg" > /etc/init.d/unilang
+==> default:     sudo chmod 755 /etc/init.d/unilang 
+==> default:     sudo update-rc.d unilang defaults
+==> default: fi
+==> default: 
+==> default: # /etc/init.d/unilang restart
+==> default: 
+==> default: echo "Stopping UniLang"
+==> default: /etc/init.d/unilang stop
+==> default: killall start unilang unilang-client
+==> default: start: no process found
+==> default: unilang: no process found
+==> default: unilang-client: no process found
+==> default: Starting UniLang
+==> default: 
+==> default: echo "Starting UniLang"
+==> default: /etc/init.d/unilang start
+==> default: sleep 5
+==> default: Server started OK
+==> default: if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-running.pl; then
+==> default: 
+==> default:     echo "Stopping UniLang"
+==> default:     /etc/init.d/unilang stop
+==> default:     killall start unilang unilang-client
+==> default: 
+==> default:     cd /var/lib/myfrdcsa/codebases/internal/unilang
+==> default: 
+==> default:     echo "Starting UniLang"
+==> default: 
+==> default: 
+==> default:     # FIXME: not working, have to check for whatever processes, like
+==> default:     # cpan, cpanm or apt-get are running and if those are still
+==> default:     # running to delay longer
+==> default: 
+==> default:     # echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
+==> default:     (sleep 10; /etc/init.d/unilang stop; killall start unilang unilang-client) &
+==> default: 
+==> default:     while ! NONINTERACTIVE=true /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; do
+==> default: 	(sleep 10; /etc/init.d/unilang stop; killall start unilang unilang-client) &
+==> default:     done
+==> default: 
+==> default:     sleep 11
+==> default: 
+==> default:     echo "Stopped UniLang"
+==> default: else
+==> default:     echo "Stopping UniLang"
+==> default:     /etc/init.d/unilang stop
+==> default:     killall start unilang unilang-client
+==> default: fi
+==> default: [Server /var/lib/myfrdcsa/codebases/internal/unilang/unilang accepting clients]
+==> default: Agent UniLang-Client registered
+==> default: Agent temp-agent-0.410080674893351 registered
+==> default: /var/lib/myfrdcsa/codebases/internal/unilang/start -u localhost 9000 -a Echo
+==> default: $VAR1 = {
+==> default:           'AgentRegistry' => '/var/lib/myfrdcsa/codebases/internal/unilang/scripts/echo -u localhost 9000',
+==> default:           'Agent' => 'Echo'
+==> default:         };
+==> default: Warning, sender <<<Echo>>> not using updated protocol
+==> default: Stopping UniLang
+==> default: start: no process found
+==> default: unilang: no process found
+==> default: unilang-client: no process found
+==> default: 
+==> default: /etc/init.d/unilang start
+==> default: sleep 5
+==> default: Server started OK
+==> default: Starting web-services
+==> default: 
+==> default: echo "Starting web-services"
+==> default: su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/unilang && NONINTERACTIVE=true install-script-dependencies \"./scripts/web-services/server -u -t XMLRPC -W 10000\""
+==> default: SCRIPT: <./scripts/web-services/server -u -t XMLRPC -W 10000>
+==> default: Nothing left to install, exiting!
+==> default: Starting Manager
+==> default: 
+==> default: echo "Starting Manager"
+==> default: su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/manager && NONINTERACTIVE=true install-script-dependencies \"./manager -u --scheduler -W 10000\""
+==> default: SCRIPT: <./manager -u --scheduler -W 10000>
+==> default: Nothing left to install, exiting!
+==> default: Stopping UniLang
+==> default: 
+==> default: echo "Stopping UniLang"
+==> default: /etc/init.d/unilang stop
+==> default: killall start unilang unilang-client
+==> default: start: no process found
+==> default: unilang: no process found
+==> default: unilang-client: no process found
+==> default: 
+==> default: if ! [ -d "/var/lib/myfrdcsa/codebases/data/freekbs2/theorem-provers" ]; then
+==> default:     # scp -r andrewdo@justin.frdcsa.org:/var/lib/myfrdcsa/codebases/data/freekbs2/theorem-provers .
+==> default:     cd /var/lib/myfrdcsa/codebases/data/freekbs2
+==> default:     cp -ar $DATA_DIR/frdcsa-misc/theorem-provers .
+==> default: fi
+==> default: if ! [ -d "/var/lib/myfrdcsa/codebases/data/freekbs2/theorem-provers" ]; then
+==> default:     echo "ERROR: Didn't set up freekbs2 theorem-provers properly"
+==> default:     exit 1
+==> default: fi
+==> default: 
+==> default: # # get SPSE2 running
+==> default: 
+==> default: if ! [ -d "/var/lib/myfrdcsa/sandbox" ]; then
+==> default:     # su $USER -c "mkdir /var/lib/myfrdcsa/sandbox"
+==> default:     mkdir /var/lib/myfrdcsa/sandbox
+==> default:     chown -R $USER.$GROUP /var/lib/myfrdcsa/sandbox
+==> default: fi
+==> default: if ! [ -d "/var/lib/myfrdcsa/sandbox" ]; then
+==> default:     echo "ERROR: Didn't set up sandbox properly"
+==> default:     exit 1
+==> default: fi
+==> default: 
+==> default: if ! [ -d "/var/lib/myfrdcsa/sandbox/opencyc-4.0/opencyc-4.0" ]; then
+==> default:     su $USER -c "mkdir /var/lib/myfrdcsa/sandbox/opencyc-4.0"
+==> default:     cd /var/lib/myfrdcsa/sandbox/opencyc-4.0
+==> default:     su $USER -c "cp -ar $DATA_DIR/frdcsa-misc/opencyc-4.0 ."
+==> default: fi
+==> default: if ! [ -d "/var/lib/myfrdcsa/sandbox/opencyc-4.0/opencyc-4.0" ]; then
+==> default:     echo "ERROR: Didn't set up opencyc-4.0 properly"
+==> default:     exit 1
+==> default: fi
+==> default: 
+==> default: 
+==> default: # FIXME: do everything to properly install inline java
+==> default: # have JAVA_HOME correctly asserted
+==> default: 
+==> default: # INSTALL Inline::Java
+==> default: 
+==> default: # # note if kbs2 isn't getting very far, try running this next line again
+==> default: 
+==> default: # /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules -f Text::Quote
+==> default: 
+==> default: export TMP_PERL_MM_OPT=$PERL_MM_OPT
+==> default: export PERL_MM_OPT=
+==> default: 
+==> default: if ! perldoc -l Text::Quote; then
+==> default:     cpanm --force Text::Quote
+==> default: fi
+==> default: /usr/local/share/perl/5.14.2/Text/Quote.pm
+==> default: 
+==> default: export PERL_MM_OPT=$TMP_PERL_MM_OPT
+==> default: 
+==> default: if ! perldoc -l Text::Quote; then
+==> default:     echo "ERROR: Text::Quote did not install"
+==> default:     exit 1
+==> default: fi
+==> default: /usr/local/share/perl/5.14.2/Text/Quote.pm
+==> default: 
+==> default: 
+==> default: export TMP_PERL_MM_OPT=$PERL_MM_OPT
+==> default: export PERL_MM_OPT=
+==> default: 
+==> default: if ! perldoc -l Tk::GraphViz; then
+==> default:     cpanm --force Tk::GraphViz
+==> default: fi
+==> default: /usr/local/share/perl/5.14.2/Tk/GraphViz.pm
+==> default: 
+==> default: export PERL_MM_OPT=$TMP_PERL_MM_OPT
+==> default: 
+==> default: if ! perldoc -l Tk::GraphViz; then
+==> default:     echo "ERROR: Tk::GraphViz did not install"
+==> default:     exit 1
+==> default: fi
+==> default: /usr/local/share/perl/5.14.2/Tk/GraphViz.pm
+==> default: 
+==> default: export TMP_PERL_MM_OPT=$PERL_MM_OPT
+==> default: export PERL_MM_OPT=
+==> default: 
+==> default: export JAVA_HOME=/usr/lib/jvm/java-7-openjdk-amd64
+==> default: 
+==> default: if ! perldoc -l Inline::Java; then
+==> default:     cd /tmp && tar xzf $DATA_DIR/frdcsa-misc/Inline-Java-0.53.tar.gz
+==> default:     cd Inline-Java-0.53
+==> default:     perl Makefile.PL J2SDK=$JAVA_HOME
+==> default:     make
+==> default:     make install    
+==> default: fi
+==> default: /usr/local/lib/perl/5.14.2/Inline/Java.pod
+==> default: 
+==> default: export PERL_MM_OPT=$TMP_PERL_MM_OPT
+==> default: 
+==> default: if ! perldoc -l Inline::Java; then
+==> default:     echo "ERROR: Inline::Java did not install"
+==> default:     exit 1
+==> default: fi
+==> default: /usr/local/lib/perl/5.14.2/Inline/Java.pod
+==> default: 
+==> default: export TMP_PERL_MM_OPT=$PERL_MM_OPT
+==> default: export PERL_MM_OPT=
+==> default: 
+==> default: if ! perldoc -l AI::Prolog; then
+==> default:     cpanm --force AI::Prolog
+==> default: fi
+==> default: /usr/local/share/perl/5.14.2/AI/Prolog.pm
+==> default: 
+==> default: export PERL_MM_OPT=$TMP_PERL_MM_OPT
+==> default: 
+==> default: if ! perldoc -l AI::Prolog; then
+==> default:     echo "ERROR: AI::Prolog did not install"
+==> default:     exit 1
+==> default: fi
+==> default: /usr/local/share/perl/5.14.2/AI/Prolog.pm
+==> default: 
+==> default: cd /var/lib/myfrdcsa/codebases/minor/spse
+==> default: 
+==> default: if ! perldoc -l Graph::Directed; then
+==> default:     su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Graph::Directed"
+==> default: fi
+==> default: /usr/share/perl5/Graph/Directed.pm
+==> default: if ! perldoc -l Graph::Directed; then
+==> default:     echo "ERROR: Graph::Directed did not install"
+==> default:     exit 1
+==> default: fi
+==> default: /usr/share/perl5/Graph/Directed.pm
+==> default: 
+==> default: if ! perldoc -l Ubigraph; then
+==> default:     su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Ubigraph"
+==> default: fi
+==> default: /usr/local/share/perl/5.14.2/Ubigraph.pm
+==> default: if ! perldoc -l Ubigraph; then
+==> default:     echo "ERROR: Ubigraph did not install"
+==> default:     exit 1
+==> default: fi
+==> default: /usr/local/share/perl/5.14.2/Ubigraph.pm
+==> default: 
+==> default: if ! perldoc -l Cal::DAV; then
+==> default:     su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Cal::DAV"
+==> default: fi
+==> default: /usr/share/perl5/Cal/DAV.pm
+==> default: if ! perldoc -l Cal::DAV; then
+==> default:     echo "ERROR: Cal::DAV did not install"
+==> default:     exit 1
+==> default: fi
+==> default: /usr/share/perl5/Cal/DAV.pm
+==> default: 
+==> default: if ! perldoc -l Net::Google::Calendar; then
+==> default:     su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Net::Google::Calendar"
+==> default: fi
+==> default: /usr/local/share/perl/5.14.2/Net/Google/Calendar.pm
+==> default: if ! perldoc -l Net::Google::Calendar; then
+==> default:     echo "ERROR: Net::Google::Calendar did not install"
+==> default:     exit 1
+==> default: fi
+==> default: /usr/local/share/perl/5.14.2/Net/Google/Calendar.pm
+==> default: 
+==> default: /etc/init.d/unilang start
+==> default: sleep 5
+==> default: Server started OK
+==> default: 
+==> default: if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
+==> default:     su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts && NONINTERACTIVE=true install-script-dependencies \"./kbs2 -y -c Org::FRDCSA::Verber::PSEx2::Do fast-import /var/lib/myfrdcsa/codebases/minor/spse/kbs/do2.kbs\""
+==> default: fi
+==> default: Statement unlikely to be reached at /usr/share/perl5/Proc/Daemon.pm line 260.
+==> default: 	(Maybe you meant system() when you said exec()?)
+==> default: [Server /var/lib/myfrdcsa/codebases/internal/unilang/unilang accepting clients]
+==> default: Agent UniLang-Client registered
+==> default: Agent KBS2-client-0.627456092366145 registered
+==> default: /var/lib/myfrdcsa/codebases/internal/unilang/start -u localhost 9000 -a KBS2
+==> default: $VAR1 = {
+==> default:           'AgentRegistry' => '/var/lib/myfrdcsa/codebases/internal/freekbs2/kbs2-server -u localhost 9000',
+==> default:           'Agent' => 'KBS2'
+==> default:         };
+==> default: $VAR1 = {
+==> default:           'Formulae' => [
+==> default:                           undef
+==> default:                         ],
+==> default:           'In' => 'KBS2'
+==> default:         };
+==> default: $VAR1 = {
+==> default:           'Formulae' => [
+==> default:                           undef
+==> default:                         ],
+==> default:           'In' => 'KBS2'
+==> default:         };
+==> default: $VAR1 = {
+==> default:           'Formulae' => [
+==> default:                           undef
+==> default:                         ],
+==> default:           'In' => 'KBS2'
+==> default:         };
+==> default: $VAR1 = {
+==> default:           'Formulae' => [
+==> default:                           undef
+==> default:                         ],
+==> default:           'In' => 'KBS2'
+==> default:         };
+==> default: Event: '?? Agent.pm:213' was unexpectedly closed at /usr/share/perl5/UniLang/Agent/Agent.pm line 233
+==> default: Event: '?? Agent.pm:213' was unexpectedly closed at /usr/share/perl5/UniLang/Agent/Agent.pm line 230
