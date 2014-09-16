@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash -v
 
 export UPDATE_REPOS=false
 
@@ -57,10 +57,14 @@ if $INSTALL_TO_VAGRANT == true; then
     fi
 fi
 
-if ! dpkg -l | grep xclip | grep -q '^ii'; then
+export APT_UPDATED=0
+
+if [ $APT_UPDATED == 0 ]; then
     apt-get update
-    apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip
+    export export APT_UPDATED=1
 fi
+apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip libb-utils-perl libcal-dav-perlW libconfig-general-perl libdata-dump-streamer-perl libfile-slurp-perl libfile-which-perl libgetopt-declare-perl libgraph-perl libpadwalker-perl libproc-processtable-perl libstring-shellquote-perl libstring-similarity-perl libtask-weaken-perl libterm-readkey-perl libtie-ixhash-perl libtk-perl libunicode-map8-perl libunicode-string-perl libxml-atom-perl libxml-dumper-perl libxml-perl libxml-twig-perl
+
 if ! dpkg -l | grep xclip | grep -q '^ii'; then
     echo "ERROR: first major group of packages did not install"
     exit 1
@@ -93,6 +97,10 @@ if ! dpkg -l | grep -E 'mysql-server-[0-9]+' | grep -q '^ii'; then
     # debconf-set-selections <<< "mysql-server-5.1 mysql-server/root_password password $PASS"
     # debconf-set-selections <<< "mysql-server-5.1 mysql-server/root_password_again password $PASS"
 
+    if [ $APT_UPDATED == 0 ]; then
+	apt-get update
+	export export APT_UPDATED=1
+    fi
     apt-get -q -y install mysql-server mysql-client
 
     echo "Give mysql server time to start up before we try to set a password..."
@@ -374,7 +382,7 @@ if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-ru
     # echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
     (sleep 10; /etc/init.d/unilang stop; killall start unilang unilang-client) &
 
-    while ! /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; do
+    while ! NONINTERACTIVE=true /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; do
 	(sleep 10; /etc/init.d/unilang stop; killall start unilang unilang-client) &
     done
 
@@ -391,10 +399,10 @@ fi
 sleep 5
 
 echo "Starting web-services"
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/unilang && install-script-dependencies \"./scripts/web-services/server -u -t XMLRPC -W 10000\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/unilang && NONINTERACTIVE=true install-script-dependencies \"./scripts/web-services/server -u -t XMLRPC -W 10000\""
 
 echo "Starting Manager"
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/manager && install-script-dependencies \"./manager -u --scheduler -W 10000\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/manager && NONINTERACTIVE=true install-script-dependencies \"./manager -u --scheduler -W 10000\""
 
 echo "Stopping UniLang"
 /etc/init.d/unilang stop
@@ -543,7 +551,7 @@ fi
 sleep 5
 
 if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
-    su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts && install-script-dependencies \"echo y | ./kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import /var/lib/myfrdcsa/codebases/minor/spse/kbs/do2.kbs\""
+    su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts && NONINTERACTIVE=true install-script-dependencies \"echo y | ./kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import /var/lib/myfrdcsa/codebases/minor/spse/kbs/do2.kbs\""
 fi
 if ! /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts/kbs2 -l | grep -q Org::FRDCSA::Verber::PSEx2::Do; then
     echo "ERROR: Org::FRDCSA::Verber::PSEx2::Do did not load"
@@ -573,10 +581,10 @@ fi
 # fi
 
 echo "Starting Test-use"
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse/scripts/ && install-script-dependencies ./test-use.pl"
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse/scripts/ && NONINTERACTIVE=true install-script-dependencies ./test-use.pl"
 
 echo "Starting SPSE2"
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && XAUTHORITY=/home/$USER/.Xauthority install-script-dependencies \"spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W 10000\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && XAUTHORITY=/home/$USER/.Xauthority NONINTERACTIVE=trueinstall-script-dependencies \"spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W 10000\""
 
 # # update this patch to work with the latest version of Tk::GraphViz
 # # FIXME: copy the modified patch to the gitroot, along with other modifications
@@ -603,12 +611,12 @@ if ! perldoc -l Tk::Month; then
 fi
 
 echo "Starting SPSE2"
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W 20000\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && NONINTERACTIVE=true install-script-dependencies \"spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W 20000\""
 
 # /etc/init.d/unilang stop
 # killall start unilang unilang-client
 
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./boss\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss && NONINTERACTIVE=true install-script-dependencies \"./boss\""
 su $USER -c "mkdir -p /var/lib/myfrdcsa/codebases/internal/boss/data/namazu"
 
 # FIXME: do "boss etags"
@@ -637,7 +645,7 @@ if ! [ -f "/var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/data/scater.gif" ]
     exit 1
 fi
 
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/ && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./frdcsa-applet -W\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/frdcsa-dashboard/ && NONINTERACTIVE=true install-script-dependencies \"./frdcsa-applet -W\""
 
 # put the stuff in /etc/init.d
 # @ (frdcsa-applet &) <- as of Sun Sep 14 21:58:06 CDT 2014, not sure what this is about
@@ -669,9 +677,12 @@ mkdir -p datasets
 chown $USER.$GROUP datasets
 
 # for workhorse
-if ! dpkg -l | grep uima-doc | grep -q '^ii'; then
-    apt-get install -y liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane
+if [ $APT_UPDATED == 0 ]; then
+    apt-get update
+    export export APT_UPDATED=1
 fi
+apt-get install -y liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane
+
 if ! dpkg -l | grep uima-doc | grep -q '^ii'; then
     echo "ERROR: second major group of packages did not install"
     exit 1
@@ -718,20 +729,24 @@ fi
 
 
 # FIXME: do we need to add a cabinet here?
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/paperless-office && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./paperless-office -W\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/paperless-office && NONINTERACTIVE=true install-script-dependencies \"./paperless-office -W\""
 
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Module::Build"
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WWW::Mechanize::Cached"
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Yahoo::Search"
 
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/workhorse/scripts/ && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./process-corpus.pl -W\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/workhorse/scripts/ && NONINTERACTIVE=true install-script-dependencies \"./process-corpus.pl -W\""
 
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Archive::Zip"
 
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./process-2.pl -W\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation && NONINTERACTIVE=true install-script-dependencies \"./process-2.pl -W\""
 
 
 # if ! dpkg -l | grep libwordnet-querydata-perl | grep -q '^ii'; then
+#    if [ $APT_UPDATED == 0 ]; then
+#	apt-get update
+#	export export APT_UPDATED=1
+#    fi
 #     # /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules WordNet::QueryData
 #     apt-get install -y wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane
 # fi
@@ -740,7 +755,7 @@ su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/nlu/syst
 #     exit 1
 # fi    
 
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/corpus && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"./corpus -h\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/corpus && NONINTERACTIVE=true install-script-dependencies \"./corpus -h\""
 
 
 # for clear
@@ -753,7 +768,7 @@ if [ ! -d "/etc/clear" ]; then
     exit 1
 fi  
 
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/clear && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/clear && NONINTERACTIVE=true install-script-dependencies \"cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W\""
 
 echo "Stopping UniLang"
 /etc/init.d/unilang stop
@@ -786,9 +801,9 @@ updatedb
 
 # get academician
 # verber
-# install-script-dependencies /var/lib/myfrdcsa/codebases/internal/verber
+# NONINTERACTIVE=true install-script-dependencies /var/lib/myfrdcsa/codebases/internal/verber
 
-# vagrant@panoply:/var/lib/myfrdcsa/codebases/internal/clear$ install-script-dependencies './cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W'
+# vagrant@panoply:/var/lib/myfrdcsa/codebases/internal/clear$ NONINTERACTIVE=true install-script-dependencies './cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W'
 # SCRIPT: <./cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W>
 # Nothing left to install, exiting!
 # vagrant@panoply:/var/lib/myfrdcsa/codebases/internal/clear$ ./cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W
