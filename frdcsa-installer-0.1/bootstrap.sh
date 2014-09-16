@@ -788,6 +788,24 @@ updatedb
 # verber
 # install-script-dependencies /var/lib/myfrdcsa/codebases/internal/verber
 
+# vagrant@panoply:/var/lib/myfrdcsa/codebases/internal/clear$ install-script-dependencies './cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W'
+# SCRIPT: <./cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W>
+# Nothing left to install, exiting!
+# vagrant@panoply:/var/lib/myfrdcsa/codebases/internal/clear$ ./cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W
+# Base class package "Net::DBus::Service" is empty.
+#     (Perhaps you need to 'use' the module which defines that package first,
+#     or make that module available in @INC (@INC contains: /etc/perl /usr/local/lib/perl/5.14.2 /usr/local/share/perl/5.14.2 /usr/lib/perl5 /usr/share/perl5 /usr/lib/perl/5.14 /usr/share/perl/5.14 /usr/local/lib/site_perl .).
+#  at /usr/share/perl5/BOSS/App/DBus/Object.pm line 3.
+# BEGIN failed--compilation aborted at /usr/share/perl5/BOSS/App/DBus/Object.pm line 3.
+# Compilation failed in require at /usr/share/perl5/BOSS/App/DBus.pm line 3.
+# BEGIN failed--compilation aborted at /usr/share/perl5/BOSS/App/DBus.pm line 3.
+# Compilation failed in require at /usr/share/perl5/Clear/Mod/GUI.pm line 3.
+# BEGIN failed--compilation aborted at /usr/share/perl5/Clear/Mod/GUI.pm line 3.
+# Compilation failed in require at /usr/share/perl5/Clear.pm line 4.
+# BEGIN failed--compilation aborted at /usr/share/perl5/Clear.pm line 4.
+# Compilation failed in require at ./cla line 3.
+# BEGIN failed--compilation aborted at ./cla line 3.
+
 echo "Finished FRDCSA Install"
 
 
