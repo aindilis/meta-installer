@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
+export UPDATE_REPOS=false
+
 export NONINTERACTIVE=true
 export PERL_MM_USE_DEFAULT=1
 
 export PRIVATE_INSTALL=false
-export UPDATE_REPOS=0
 
 export THE_SOURCE="/var/lib/myfrdcsa/codebases/releases/myfrdcsa-0.1/myfrdcsa-0.1/frdcsa.bashrc"
 
@@ -125,7 +126,7 @@ fi
 if [ ! -d "/var/lib/myfrdcsa/codebases/releases" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/releases"
 else
-    if [ $UPDATE_REPOS == 1 ]; then
+    if [ $UPDATE_REPOS == true ]; then
 	pushd /var/lib/myfrdcsa/codebases/releases
 	su $USER -c "git pull"
 	popd
@@ -139,7 +140,7 @@ fi
 if [ ! -d "/var/lib/myfrdcsa/codebases/minor" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/minor"
 else
-    if [ $UPDATE_REPOS == 1 ]; then
+    if [ $UPDATE_REPOS == true ]; then
 	pushd /var/lib/myfrdcsa/codebases/minor
 	su $USER -c "git pull"
 	popd
@@ -155,7 +156,7 @@ cd /home/$USER
 if [ ! -d "/home/$USER/.myconfig" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/.myconfig"
 else
-    if [ $UPDATE_REPOS == 1 ]; then
+    if [ $UPDATE_REPOS == true ]; then
 	pushd /home/$USER/.myconfig
 	su $USER -c "git pull"
 	popd
@@ -226,7 +227,7 @@ if $PRIVATE_INSTALL; then
 	su $USER -c "git clone ssh://andrewdo@192.168.1.220/gitroot/frdcsa-private"
 	ln -s frdcsa-private frdcsa
     else
-	if [ $UPDATE_REPOS == 1 ]; then
+	if [ $UPDATE_REPOS == true ]; then
 	    pushd /home/$USER/.config/frdcsa-private
 	    su $USER -c "git pull"
 	    popd
@@ -245,7 +246,7 @@ else
 	su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/frdcsa-public"
 	ln -s frdcsa-public frdcsa
     else
-	if [ $UPDATE_REPOS == 1 ]; then
+	if [ $UPDATE_REPOS == true ]; then
 	    pushd /home/$USER/.config/frdcsa-public
 	    su $USER -c "git pull"
 	    popd
@@ -272,7 +273,7 @@ cd /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups
 if [ ! -d "/var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups/mysql-backup" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/mysql-backup"
 else
-    if [ $UPDATE_REPOS == 1 ]; then
+    if [ $UPDATE_REPOS == true ]; then
 	pushd /var/lib/myfrdcsa/codebases/internal/kbfs/data/mysql-backups/mysql-backup
 	su $USER -c "git pull"
 	popd
@@ -301,7 +302,7 @@ if [ ! -d "$DATA_DIR/frdcsa-misc/etc" ]; then
     cd $DATA_DIR
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/frdcsa-misc"
 else
-    if [ $UPDATE_REPOS == 1 ]; then
+    if [ $UPDATE_REPOS == true ]; then
 	pushd $DATA_DIR/frdcsa-misc
 	su $USER -c "git pull"
 	popd
@@ -360,9 +361,20 @@ if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-ru
     /etc/init.d/unilang stop
     killall start unilang unilang-client
 
+    cd /var/lib/myfrdcsa/codebases/internal/unilang
+
     echo "Starting UniLang"
-    echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
-    cd /var/lib/myfrdcsa/codebases/internal/unilang && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"
+
+
+    # echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
+    (sleep 10; /etc/init.d/unilang stop; killall start unilang unilang-client) &
+
+    while /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; do
+	(sleep 10; /etc/init.d/unilang stop; killall start unilang unilang-client) &
+    done
+
+    sleep 11
+
     echo "Stopped UniLang"
 else
     echo "Stopping UniLang"
