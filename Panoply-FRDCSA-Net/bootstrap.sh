@@ -2,6 +2,8 @@
 
 set -v
 
+echo "Installer for Debian Wheezy"
+
 export UPDATE_REPOS=true
 
 export NONINTERACTIVE=true
@@ -65,7 +67,7 @@ if [ $APT_UPDATED == 0 ]; then
     apt-get update
     export export APT_UPDATED=1
 fi
-apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip libb-utils-perl libcal-dav-perl libconfig-general-perl libdata-dump-streamer-perl libfile-slurp-perl libfile-which-perl libgetopt-declare-perl libgraph-perl libpadwalker-perl libproc-processtable-perl libstring-shellquote-perl libstring-similarity-perl libtask-weaken-perl libterm-readkey-perl libtie-ixhash-perl libtk-perl libunicode-map8-perl libunicode-string-perl libxml-atom-perl libxml-dumper-perl libxml-perl libxml-twig-perl libnet-telnet-perl liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane libevent-perl
+apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip libb-utils-perl libcal-dav-perl libconfig-general-perl libdata-dump-streamer-perl libfile-slurp-perl libfile-which-perl libgetopt-declare-perl libgraph-perl libpadwalker-perl libproc-processtable-perl libstring-shellquote-perl libstring-similarity-perl libtask-weaken-perl libterm-readkey-perl libtie-ixhash-perl libtk-perl libunicode-map8-perl libunicode-string-perl libxml-atom-perl libxml-dumper-perl libxml-perl libxml-twig-perl libnet-telnet-perl liblink-grammar4 liblink-grammar4-dev link-grammar link-grammar-dictionaries-en libuima-addons-java libuima-addons-java-doc libuima-as-java libuima-as-java-doc libuima-adapter-soap-java libuima-adapter-vinci-java libuima-core-java libuima-cpe-java libuima-document-annotation-java libuima-tools-java libuima-vinci-java uima-doc uima-examples uima-utils wordnet wordnet-base wordnet-gui libwordnet-querydata-perl festival wamerican-insane libevent-perl libfile-pid-perl
 
 if ! dpkg -l | grep wamerican-insane | grep -q '^ii'; then
     echo "ERROR: first major group of packages did not install"
@@ -377,22 +379,18 @@ fi
 
 # /etc/init.d/unilang restart
 
-echo "Stopping UniLang"
+echo "Stopping UniLang in case it was already running from a previous run of the provisioning script"
 /etc/init.d/unilang stop
 killall start unilang unilang-client
 
-echo "Starting UniLang"
+echo "Starting UniLang to test if it works"
 /etc/init.d/unilang start
 sleep 5
 if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-running.pl; then
 
-    echo "Stopping UniLang"
-    /etc/init.d/unilang stop
-    killall start unilang unilang-client
-
     cd /var/lib/myfrdcsa/codebases/internal/unilang
 
-    echo "Starting UniLang"
+    echo "Installing UniLang"
 
 
     # FIXME: not working, have to check for whatever processes, like
@@ -400,21 +398,30 @@ if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-ru
     # running to delay longer
 
     # echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
-    (sleep 30; /etc/init.d/unilang stop; killall start unilang unilang-client) &
 
+    echo "Setting timed stopper"
+    export $UNILANG_INSTALL_SLEEP_DURATION=35
+    echo "Duration $UNILANG_INSTALL_SLEEP_DURATION"
+    (sleep $UNILANG_INSTALL_SLEEP_DURATION; /etc/init.d/unilang stop; killall start unilang unilang-client) &
+
+    echo "Trying to launch UniLang to try to get dependencies"
     while ! NONINTERACTIVE=true /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; do
-	(sleep 30; /etc/init.d/unilang stop; killall start unilang unilang-client) &
+	echo "Setting timed stopper (again)"
+	(sleep $UNILANG_INSTALL_SLEEP_DURATION; /etc/init.d/unilang stop; killall start unilang unilang-client) &
     done
 
-    sleep 11
+    echo "UniLang exited manually, cleaning up"
+    sleep (($UNILANG_INSTALL_SLEEP_DURATION + 5))
 
-    echo "Stopped UniLang"
 else
-    echo "Stopping UniLang"
+    echo "UniLang is already installed and running; stopping UniLang"
     /etc/init.d/unilang stop
     killall start unilang unilang-client
 fi
 
+echo "UniLang is currently installed"
+
+echo "UniLang starting up again to install subsequent agents"
 /etc/init.d/unilang start
 sleep 5
 
@@ -424,7 +431,7 @@ su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/unila
 echo "Starting Manager"
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/manager && NONINTERACTIVE=true install-script-dependencies \"./manager -u --scheduler -W 10000\""
 
-echo "Stopping UniLang"
+echo "Current batch of agents installed, stopping UniLang for now"
 /etc/init.d/unilang stop
 killall start unilang unilang-client
 
