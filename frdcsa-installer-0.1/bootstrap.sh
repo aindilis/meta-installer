@@ -345,14 +345,12 @@ fi
 echo "Stopping UniLang"
 killall unilang
 
-# if [ false ]; then
-#     echo "Starting UniLang"
-#     echo 'killall unilang' | at now + 2 minutes
-#     cd /var/lib/myfrdcsa/codebases/internal/unilang && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"
-# fi
+echo "Starting UniLang"
+echo 'killall unilang' | at now + 2 minutes
+cd /var/lib/myfrdcsa/codebases/internal/unilang && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"
 
 /etc/init.d/unilang start
-sleep 10
+sleep 5
 
 echo "Starting web-services"
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/unilang && install-script-dependencies \"./scripts/web-services/server -u -t XMLRPC -W 10000\""
@@ -403,9 +401,67 @@ fi
 
 # # note if kbs2 isn't getting very far, try running this next line again
 
-/var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies /var/lib/myfrdcsa/codebases/minor/spse/scripts/test-use.pl
-/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules -f Text::Quote
-/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules -f Tk::GraphViz
+# /var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules -f Text::Quote
+
+export TMP_PERL_MM_OPT=$PERL_MM_OPT
+export PERL_MM_OPT=
+
+if ! perldoc -l Text::Quote; then
+    cpanm --force Text::Quote
+fi
+
+export PERL_MM_OPT=$TMP_PERL_MM_OPT
+
+if ! perldoc -l Text::Quote; then
+    echo "ERROR: Text::Quote did not install"
+    exit 1
+fi
+
+
+export TMP_PERL_MM_OPT=$PERL_MM_OPT
+export PERL_MM_OPT=
+
+if ! perldoc -l Tk::GraphViz; then
+    cpanm --force Tk::GraphViz
+fi
+
+export PERL_MM_OPT=$TMP_PERL_MM_OPT
+
+if ! perldoc -l Tk::GraphViz; then
+    echo "ERROR: Tk::GraphViz did not install"
+    exit 1
+fi
+
+export TMP_PERL_MM_OPT=$PERL_MM_OPT
+export PERL_MM_OPT=
+
+if ! perldoc -l Inline::Java; then
+    cpanm --force Inline::Java
+fi
+
+export PERL_MM_OPT=$TMP_PERL_MM_OPT
+
+if ! perldoc -l Inline::Java; then
+    echo "ERROR: Inline::Java did not install"
+    exit 1
+fi
+
+export TMP_PERL_MM_OPT=$PERL_MM_OPT
+export PERL_MM_OPT=
+
+if ! perldoc -l AI::Prolog; then
+    cpanm --force AI::Prolog
+fi
+
+export PERL_MM_OPT=$TMP_PERL_MM_OPT
+
+if ! perldoc -l AI::Prolog; then
+    echo "ERROR: AI::Prolog did not install"
+    exit 1
+fi
+
+/etc/init.d/unilang start
+sleep 5
 
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/freekbs2/scripts && install-script-dependencies \"./kbs2 -c Org::FRDCSA::Verber::PSEx2::Do fast-import do2.kbs\""
 
@@ -423,7 +479,7 @@ su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && 
 # FIXME: copy the modified patch to the gitroot, along with other modifications
 cd /usr/local/share/perl
 if ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
-    patch -p0 -R -i /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
+    patch -p0 -i /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
 fi
 if ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
     echo "ERROR: couldn't patch Tk::GraphViz"
@@ -433,23 +489,15 @@ fi
 echo "Starting SPSE2"
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies \"spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W 10000\""
 
+/etc/init.d/unilang stop
+killall start unilang unilang-client
+
 echo "Finishing for now";
 exit 1
 
 
-export TMP_PERL_MM_OPT=$PERL_MM_OPT
-export PERL_MM_OPT=
 
-if ! perldoc -l AI::Prolog; then
-    cpanm --force AI::Prolog
-fi
-
-export PERL_MM_OPT=$TMP_PERL_MM_OPT
-
-if ! perldoc -l AI::Prolog; then
-    echo "ERROR: AI::Prolog did not install"
-    exit 1
-fi
+##############################################################################################
 
 
 
