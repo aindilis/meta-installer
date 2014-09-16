@@ -56,12 +56,17 @@ if $INSTALL_TO_VAGRANT == true; then
     fi
 fi
 
-if ! dpkg -l | grep -E 'mysql-server-[0-9]+' | grep -q '^ii'; then
+if ! dpkg -l | grep xclip | grep -q '^ii'; then
     apt-get update
+    apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip
+fi
+
+if ! dpkg -l | grep -E 'mysql-server-[0-9]+' | grep -q '^ii'; then
+    
 
     # FIXME: add something here to abort installation if it detects that it will remove any packages
     
-    apt-get install -y git emacs apg libclass-methodmaker-perl w3m-el mew bbdb nmap super libssl-dev chase libxml2-dev link-grammar liblink-grammar4 liblink-grammar4-dev screen cpanminus perl-doc libssl-dev bbdb openjdk-7-jdk libxml-atom-perl namazu2 namazu2-index-tools apt-file x11-apps dlocate xclip
+    
 
     # http://stackoverflow.com/questions/1202347/how-can-i-pass-a-password-from-a-bash-script-to-aptitude-for-installing-mysql
 
@@ -343,11 +348,27 @@ fi
 # /etc/init.d/unilang restart
 
 echo "Stopping UniLang"
-killall unilang
+/etc/init.d/unilang stop
+killall start unilang unilang-client
 
 echo "Starting UniLang"
-echo 'killall unilang' | at now + 2 minutes
-cd /var/lib/myfrdcsa/codebases/internal/unilang && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"
+/etc/init.d/unilang start
+sleep 5
+if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-running.pl; then
+
+    echo "Stopping UniLang"
+    /etc/init.d/unilang stop
+    killall start unilang unilang-client
+
+    echo "Starting UniLang"
+    echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
+    cd /var/lib/myfrdcsa/codebases/internal/unilang && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"
+    echo "Stopped UniLang"
+else
+    echo "Stopping UniLang"
+    /etc/init.d/unilang stop
+    killall start unilang unilang-client
+fi
 
 /etc/init.d/unilang start
 sleep 5
@@ -358,6 +379,7 @@ su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/unila
 echo "Starting Manager"
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/manager && install-script-dependencies \"./manager -u --scheduler -W 10000\""
 
+echo "Stopping UniLang"
 /etc/init.d/unilang stop
 killall start unilang unilang-client
 
