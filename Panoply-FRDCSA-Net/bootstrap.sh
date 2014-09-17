@@ -600,10 +600,10 @@ su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && 
 # update this patch to work with the latest version of Tk::GraphViz
 # FIXME: copy the modified patch to the gitroot, along with other modifications
 cd /usr/local/share/perl
-if [ ! -f /usr/local/share/perl/5.18.1/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
-    patch -p0 -i /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
+if [ ! -f /usr/local/share/perl/5.14.2/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.14.2/Tk/GraphViz.pm; then 
+    patch -p0 -R -i /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
 fi
-if [ ! -f /usr/local/share/perl/5.18.1/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
+if [ ! -f /usr/local/share/perl/5.14.2/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.14.2/Tk/GraphViz.pm; then 
     echo "ERROR: couldn't patch Tk::GraphViz"
     exit 1
 fi
