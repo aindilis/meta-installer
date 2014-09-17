@@ -597,16 +597,16 @@ fi
 echo "Starting SPSE2"
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && XAUTHORITY=/home/$USER/.Xauthority NONINTERACTIVE=trueinstall-script-dependencies \"spse2 -c Org::FRDCSA::Verber::PSEx2::Do -W 10000\""
 
-# update this patch to work with the latest version of Tk::GraphViz
-# FIXME: copy the modified patch to the gitroot, along with other modifications
-cd /usr/local/share/perl
-if [ ! -f /usr/local/share/perl/5.18.1/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
-    patch -p0 -R -i /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
-fi
-if [ ! -f /usr/local/share/perl/5.18.1/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
-    echo "ERROR: couldn't patch Tk::GraphViz"
-    exit 1
-fi
+# # update this patch to work with the latest version of Tk::GraphViz
+# # FIXME: copy the modified patch to the gitroot, along with other modifications
+# cd /usr/local/share/perl
+# if [ ! -f /usr/local/share/perl/5.18.1/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
+#     patch -p0 -i /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
+# fi
+# if [ ! -f /usr/local/share/perl/5.18.1/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
+#     echo "ERROR: couldn't patch Tk::GraphViz"
+#     exit 1
+# fi
 
 export TMP_PERL_MM_OPT=$PERL_MM_OPT
 export PERL_MM_OPT=
@@ -751,6 +751,11 @@ su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scri
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules -f Yahoo::Search"
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/workhorse/scripts/ && NONINTERACTIVE=true install-script-dependencies \"./process-corpus.pl -W\""
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Archive::Zip"
+
+# FIXME: in order to install this have to link the wordnet dirs and install the wordnet::tools and wordnet::senserelate::allwords
+
+# su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation && NONINTERACTIVE=true install-script-dependencies \"./process-2.pl -W\""
+
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/corpus && NONINTERACTIVE=true install-script-dependencies \"./corpus -h\""
 
 # for clear
@@ -762,6 +767,8 @@ if [ ! -d "/etc/clear" ]; then
     echo "ERROR: /etc/clear did not copy"
     exit 1
 fi  
+
+# su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/clear && NONINTERACTIVE=true install-script-dependencies \"cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W\""
 
 echo "Stopping UniLang"
 /etc/init.d/unilang stop
@@ -805,25 +812,5 @@ su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss/
 # get academician
 # verber
 # NONINTERACTIVE=true install-script-dependencies /var/lib/myfrdcsa/codebases/internal/verber
-
-if [ ! -d /usr/local/WordNet-3.0/dict ]; then
-    mkdir -p /usr/local/WordNet-3.0/dict/
-fi
-if [ ! -d /usr/local/WordNet-3.0/dict ]; then
-    echo "ERROR: didn't create /usr/local/WordNet-3.0/dict"
-fi
-if [ ! -h /usr/local/WordNet-3.0/dict/data.noun ]; then
-    for it in `ls /usr/share/wordnet`; do sudo ln -s /usr/share/wordnet/$it /usr/local/WordNet-3.0/dict$it ; done
-    for it in `ls /usr/share/wordnet`; do sudo ln -s /usr/share/wordnet/$it /usr/local/WordNet-3.0/dict/ ; done 
-fi
-if [ ! -h /usr/local/WordNet-3.0/dict/data.noun ]; then
-    echo "ERROR: didn't create symlinks /usr/local/WordNet-3.0/* or /usr/local/WordNet-3.0/dict/*"
-fi
-
-cpanm WordNet::Tools WordNet::SenseRelate::AllWords WordNet::QueryData 
-
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation && NONINTERACTIVE=true install-script-dependencies \"./process-2.pl -W\""
-
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/clear && NONINTERACTIVE=true install-script-dependencies \"cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W\""
 
 echo "Finished FRDCSA Install"
