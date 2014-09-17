@@ -50,15 +50,16 @@ elif $INSTALL_TO_HOST == true; then
     echo nothing to do for now
 fi
 
-# setup a proper sources.list
 if $INSTALL_TO_VAGRANT == true; then
-    # cp $DATA_DIR/sources.list /etc/apt
 
     # FIXME: add something here to make it idempotent
-    if [ ! -f /home/$USER/.ssh/authorized_keys ] || ! grep -q 'andrewdo@justin' /home/$USER/.ssh/authorized_keys; then
+    if ! grep -q 'andrewdo@justin' /home/$USER/.ssh/authorized_keys; then
 	cat $DATA_DIR/id_rsa.pub >> /home/$USER/.ssh/authorized_keys
     fi
 fi
+
+# setup a proper sources.list
+# cp $DATA_DIR/sources.list /etc/apt
 
 export APT_UPDATED=0
 
