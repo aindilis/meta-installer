@@ -58,6 +58,18 @@ if $INSTALL_TO_VAGRANT == true; then
     fi
 fi
 
+if ! grep -q "Host posi.frdcsa.org" /home/$USER/.ssh/config; then
+    echo -e "Host posi.frdcsa.org\n\tStrictHostKeyChecking no\n" >> /home/$USER/.ssh/config
+    chown $USER.$GROUP /home/$USER/.ssh/authorized_keys /home/$USER/.ssh/config
+    cp $DATA_DIR/frdcsa_git_id_rsa /home/$USER/.ssh/id_rsa
+    chown $USER.$GROUP /home/$USER/.ssh/id_rsa
+    chmod 600 /home/$USER/.ssh/id_rsa
+fi
+if ! grep -q "BEGIN RSA PRIVATE KEY" /home/$USER/.ssh/id_rsa; then
+    echo "ERROR: do not possess the key"
+    exit 1;
+fi
+
 # setup a proper sources.list
 # cp $DATA_DIR/sources.list /etc/apt
 
@@ -131,14 +143,6 @@ if [ ! -d "/var/lib/myfrdcsa/codebases" ]; then
 fi
 
 cd /var/lib/myfrdcsa/codebases
-
-if ! grep -q "Host posi.frdcsa.org" /home/$USER/.ssh/config; then
-    echo -e "Host posi.frdcsa.org\n\tStrictHostKeyChecking no\n" >> /home/$USER/.ssh/config
-    chown $USER.$GROUP /home/$USER/.ssh/authorized_keys /home/$USER/.ssh/config
-    cp $DATA_DIR/frdcsa_git_id_rsa /home/$USER/.ssh/id_rsa
-    chown $USER.$GROUP /home/$USER/.ssh/id_rsa
-    chmod 600 /home/$USER/.ssh/id_rsa
-fi
 
 if [ ! -d "/var/lib/myfrdcsa/codebases/releases" ]; then
     su $USER -c "git clone ssh://readonly@posi.frdcsa.org/gitroot/releases"
