@@ -382,6 +382,8 @@ if ! perldoc -l File::Stat; then
     exit 1
 fi
 
+######################################################################################3
+
 echo "STARTING INSTALLATION OF UNILANG: PROCESS IS CONFUSING, PLEASE WAIT UP TO 15 MINUTES FOR IT TO COMPLETE (until you see 'INSTALLATION OF UNILANG COMPLETE')"
 
 if [ ! -f "/etc/init.d/unilang" ]; then
@@ -394,59 +396,68 @@ echo "Stopping UniLang in case it was already running from a previous run of the
 /etc/init.d/unilang stop
 killall start unilang unilang-client
 
-export UNILANG_START_DURATION=5
-export UNILANG_INSTALL_SLEEP_DURATION=45
-let UNILANG_INSTALL_SLEEP_DURATION_PLUS_WAIT=$UNILANG_INSTALL_SLEEP_DURATION+5
-export UNILANG_INSTALL_SLEEP_DURATION_PLUS_WAIT
+# export UNILANG_START_DURATION=5
+# export UNILANG_INSTALL_SLEEP_DURATION=45
+# let UNILANG_INSTALL_SLEEP_DURATION_PLUS_WAIT=$UNILANG_INSTALL_SLEEP_DURATION+5
+# export UNILANG_INSTALL_SLEEP_DURATION_PLUS_WAIT
 
-echo "Starting UniLang to test if it works"
-/etc/init.d/unilang start
-sleep $UNILANG_START_DURATION
-if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-running.pl; then
+# echo "Starting UniLang to test if it works"
+# /etc/init.d/unilang start
+# sleep $UNILANG_START_DURATION
+# if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-running.pl; then
 
-    echo "Stopping whatever was running of UniLang after testing if it works"
-    /etc/init.d/unilang stop
-    killall start unilang unilang-client
+#     echo "Stopping whatever was running of UniLang after testing if it works"
+#     /etc/init.d/unilang stop
+#     killall start unilang unilang-client
 
-    cd /var/lib/myfrdcsa/codebases/internal/unilang
+#     cd /var/lib/myfrdcsa/codebases/internal/unilang
 
-    echo "Installing UniLang"
+#     echo "Installing UniLang"
 
 
-    # FIXME: not working, have to check for whatever processes, like
-    # cpan, cpanm or apt-get are running and if those are still
-    # running to delay longer
+#     # FIXME: not working, have to check for whatever processes, like
+#     # cpan, cpanm or apt-get are running and if those are still
+#     # running to delay longer
 
-    # echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
+#     # echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
 
-    /var/lib/myfrdcsa/codebases/internal/perllib/scripts/install-helper.pl -d $UNILANG_INSTALL_SLEEP_DURATION -c "killall install-script-dependencies" -m "Setting timed stopper, duration $UNILANG_INSTALL_SLEEP_DURATION"
+#     /var/lib/myfrdcsa/codebases/internal/perllib/scripts/install-helper.pl -d $UNILANG_INSTALL_SLEEP_DURATION -c "killall install-script-dependencies" -m "Setting timed stopper, duration $UNILANG_INSTALL_SLEEP_DURATION"
 
-    echo "Trying to launch UniLang to try to get dependencies"
+#     echo "Trying to launch UniLang to try to get dependencies"
 
-    CURRENT_NONINTERACTIVE=$NONINTERACTIVE
-    NONINTERACTIVE=true
+#     CURRENT_NONINTERACTIVE=$NONINTERACTIVE
+#     NONINTERACTIVE=true
 
-    LOOP=true
-    while $LOOP; do
-	echo "Trying..."
-	echo `pwd`
-	if /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; then
-	    LOOP=false
-	fi
-    done
+#     LOOP=true
+#     while $LOOP; do
+# 	echo "Trying..."
+# 	echo `pwd`
+# 	if /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; then
+# 	    LOOP=false
+# 	fi
+#     done
 
-    NONINTERACTIVE=$CURRENT_NONINTERACTIVE
+#     NONINTERACTIVE=$CURRENT_NONINTERACTIVE
 
-    echo "Ok, UniLang exited successfully, cleaning up"
-    killall install-helper.pl
+#     echo "Ok, UniLang exited successfully, cleaning up"
+#     killall install-helper.pl
 
-else
-    echo "UniLang is already installed and running; stopping UniLang"
-    /etc/init.d/unilang stop
-    killall start unilang unilang-client
+# else
+#     echo "UniLang is already installed and running; stopping UniLang"
+#     /etc/init.d/unilang stop
+#     killall start unilang unilang-client
+# fi
+
+cd /var/lib/myfrdcsa/codebases/internal/unilang/ && /var/lib/myfrdcsa/codebases/internal/unilang/scripts/install-unilang.pl
+
+if ! /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; then
+    echo "ERROR: Installation of Unilang failed"
+    exit 1
 fi
 
 echo "INSTALLATION OF UNILANG COMPLETE"
+
+######################################################################################3
 
 echo "UniLang starting up again to install subsequent agents"
 /etc/init.d/unilang start

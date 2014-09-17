@@ -419,17 +419,23 @@ if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-ru
 
     # echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
 
-    echo "Setting timed stopper, duration $UNILANG_INSTALL_SLEEP_DURATION"
-    /var/lib/myfrdcsa/codebases/internal/perllib/scripts/install-helper.pl -d $UNILANG_INSTALL_SLEEP_DURATION
+    /var/lib/myfrdcsa/codebases/internal/perllib/scripts/install-helper.pl -d $UNILANG_INSTALL_SLEEP_DURATION -c "killall install-script-dependencies" -m "Setting timed stopper, duration $UNILANG_INSTALL_SLEEP_DURATION"
 
     echo "Trying to launch UniLang to try to get dependencies"
+
+    CURRENT_NONINTERACTIVE=$NONINTERACTIVE
+    NONINTERACTIVE=true
+
     LOOP=true
     while $LOOP; do
 	echo "Trying..."
-	if NONINTERACTIVE=true /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; then
+	echo `pwd`
+	if /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; then
 	    LOOP=false
 	fi
     done
+
+    NONINTERACTIVE=$CURRENT_NONINTERACTIVE
 
     echo "Ok, UniLang exited successfully, cleaning up"
     killall install-helper.pl
