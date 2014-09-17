@@ -394,6 +394,7 @@ fi
 
 cd /var/lib/myfrdcsa/codebases/internal/myfrdcsa && /var/lib/myfrdcsa/codebases/internal/myfrdcsa/scripts/install-multi-agent-system.pl
 
+cd /var/lib/myfrdcsa/codebases/internal/unilang
 if ! /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; then
     echo "ERROR: Installation of Unilang failed"
     exit 1
