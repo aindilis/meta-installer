@@ -355,19 +355,6 @@ if ! perldoc -l File::Signature; then
     exit 1
 fi
 
-export TMP_PERL_MM_OPT=$PERL_MM_OPT
-export PERL_MM_OPT=
-
-if ! perldoc -l Dir::List; then
-    cpanm -f Dir::List
-fi
-
-export PERL_MM_OPT=$TMP_PERL_MM_OPT
-
-if ! perldoc -l Dir::List; then
-    echo "ERROR: didn't install Dir::List correctly"
-    exit 1
-fi
 
 if ! perldoc -l File::Stat; then
     # DONE: FIXME: manually install File::Stat
@@ -397,7 +384,7 @@ echo "Stopping UniLang in case it was already running from a previous run of the
 killall start unilang unilang-client
 
 export UNILANG_START_DURATION=5
-export UNILANG_INSTALL_SLEEP_DURATION=45
+export UNILANG_INSTALL_SLEEP_DURATION=60
 let UNILANG_INSTALL_SLEEP_DURATION_PLUS_WAIT=$UNILANG_INSTALL_SLEEP_DURATION+5
 export UNILANG_INSTALL_SLEEP_DURATION_PLUS_WAIT
 
@@ -422,15 +409,14 @@ if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-ru
     # echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
 
     echo "Setting timed stopper, duration $UNILANG_INSTALL_SLEEP_DURATION"
-    system "/var/lib/myfrdcsa/codebases/internal/unilang/scripts/install-helper.pl -d $UNILANG_INSTALL_SLEEP_DURATION"
 
     echo "Trying to launch UniLang to try to get dependencies"
-    while ! NONINTERACTIVE=true /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; do
-	echo "Trying again..."
+    while ((sleep $UNILANG_INSTALL_SLEEP_DURATION; echo "Stopping UniLang"; /etc/init.d/unilang stop; killall start unilang unilang-client) &) && ! NONINTERACTIVE=true /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; do
+	echo "Setting timed stopper (again)"
     done
 
-    echo "Ok, UniLang exited successfully, cleaning up"
-    killall install-helper.pl
+    echo "UniLang exited manually, cleaning up"
+    sleep $UNILANG_INSTALL_SLEEP_DURATION_PLUS_WAIT
 
 else
     echo "UniLang is already installed and running; stopping UniLang"
@@ -783,12 +769,9 @@ su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scri
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules -f Yahoo::Search"
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/workhorse/scripts/ && NONINTERACTIVE=true install-script-dependencies \"./process-corpus.pl -W\""
 su $USER -c "/var/lib/myfrdcsa/codebases/minor/package-installation-manager/scripts/install-cpan-modules Archive::Zip"
-
-# FIXME: in order to install this have to link the wordnet dirs and install the wordnet::tools and wordnet::senserelate::allwords
-
-# su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation && NONINTERACTIVE=true install-script-dependencies \"./process-2.pl -W\""
-
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation && NONINTERACTIVE=true install-script-dependencies \"./process-2.pl -W\""
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/corpus && NONINTERACTIVE=true install-script-dependencies \"./corpus -h\""
+
 
 # for clear
 if [ ! -d "/etc/clear" ]; then
@@ -800,7 +783,7 @@ if [ ! -d "/etc/clear" ]; then
     exit 1
 fi  
 
-# su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/clear && NONINTERACTIVE=true install-script-dependencies \"cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W\""
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/clear && NONINTERACTIVE=true install-script-dependencies \"cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W\""
 
 echo "Stopping UniLang"
 /etc/init.d/unilang stop
@@ -811,8 +794,8 @@ killall start unilang unilang-client
 apt-file update
 update-dlocatedb
 updatedb
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss/ && ./boss updatedb -y"
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss/ && ./boss etags -y"
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss/ && ./boss updatedb"
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss/ && ./boss etags"
 
 # TODO
 
