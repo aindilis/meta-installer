@@ -386,7 +386,7 @@ if ! perldoc -l File::Stat; then
     exit 1
 fi
 
-######################################################################################3
+#####################################################################################
 
 echo "STARTING INSTALLATION OF UNILANG: PROCESS IS CONFUSING, PLEASE WAIT UP TO 15 MINUTES FOR IT TO COMPLETE (until you see 'INSTALLATION OF UNILANG COMPLETE')"
 
@@ -406,7 +406,7 @@ fi
 
 echo "INSTALLATION OF UNILANG COMPLETE"
 
-######################################################################################3
+#####################################################################################
 
 echo "UniLang starting up again to install subsequent agents"
 /etc/init.d/unilang start
@@ -601,7 +601,7 @@ su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/spse && 
 # FIXME: copy the modified patch to the gitroot, along with other modifications
 cd /usr/local/share/perl
 if [ ! -f /usr/local/share/perl/5.18.1/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
-    patch -p0 -R -i /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
+    patch -p0 -i /var/lib/myfrdcsa/codebases/minor/spse/Tk-GraphViz.pm.patch
 fi
 if [ ! -f /usr/local/share/perl/5.18.1/Tk/GraphViz.pm ] || ! grep -q 'push @{$self->{layout}}, join("",@item);' /usr/local/share/perl/5.18.1/Tk/GraphViz.pm; then 
     echo "ERROR: couldn't patch Tk::GraphViz"
@@ -763,6 +763,26 @@ if [ ! -d "/etc/clear" ]; then
     exit 1
 fi  
 
+if [ ! -d /usr/local/WordNet-3.0/dict ]; then
+    mkdir -p /usr/local/WordNet-3.0/dict/
+fi
+if [ ! -d /usr/local/WordNet-3.0/dict ]; then
+    echo "ERROR: didn't create /usr/local/WordNet-3.0/dict"
+fi
+if [ ! -h /usr/local/WordNet-3.0/dict/data.noun ]; then
+    for it in `ls /usr/share/wordnet`; do sudo ln -s /usr/share/wordnet/$it /usr/local/WordNet-3.0/dict$it ; done
+    for it in `ls /usr/share/wordnet`; do sudo ln -s /usr/share/wordnet/$it /usr/local/WordNet-3.0/dict/ ; done 
+fi
+if [ ! -h /usr/local/WordNet-3.0/dict/data.noun ]; then
+    echo "ERROR: didn't create symlinks /usr/local/WordNet-3.0/* or /usr/local/WordNet-3.0/dict/*"
+fi
+
+cpanm WordNet::Tools WordNet::SenseRelate::AllWords WordNet::QueryData 
+
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation && NONINTERACTIVE=true install-script-dependencies \"./process-2.pl -W\""
+
+su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/clear && NONINTERACTIVE=true install-script-dependencies \"cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W\""
+
 echo "Stopping UniLang"
 /etc/init.d/unilang stop
 killall start unilang unilang-client
@@ -774,6 +794,10 @@ update-dlocatedb
 updatedb
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss/ && ./boss updatedb -y"
 su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss/ && ./boss etags -y"
+
+echo "Finished FRDCSA Install"
+
+#####################################################################################
 
 # TODO
 
@@ -805,25 +829,3 @@ su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/boss/
 # get academician
 # verber
 # NONINTERACTIVE=true install-script-dependencies /var/lib/myfrdcsa/codebases/internal/verber
-
-if [ ! -d /usr/local/WordNet-3.0/dict ]; then
-    mkdir -p /usr/local/WordNet-3.0/dict/
-fi
-if [ ! -d /usr/local/WordNet-3.0/dict ]; then
-    echo "ERROR: didn't create /usr/local/WordNet-3.0/dict"
-fi
-if [ ! -h /usr/local/WordNet-3.0/dict/data.noun ]; then
-    for it in `ls /usr/share/wordnet`; do sudo ln -s /usr/share/wordnet/$it /usr/local/WordNet-3.0/dict$it ; done
-    for it in `ls /usr/share/wordnet`; do sudo ln -s /usr/share/wordnet/$it /usr/local/WordNet-3.0/dict/ ; done 
-fi
-if [ ! -h /usr/local/WordNet-3.0/dict/data.noun ]; then
-    echo "ERROR: didn't create symlinks /usr/local/WordNet-3.0/* or /usr/local/WordNet-3.0/dict/*"
-fi
-
-cpanm WordNet::Tools WordNet::SenseRelate::AllWords WordNet::QueryData 
-
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/minor/nlu/systems/annotation && NONINTERACTIVE=true install-script-dependencies \"./process-2.pl -W\""
-
-su $USER -c "source $THE_SOURCE && cd /var/lib/myfrdcsa/codebases/internal/clear && NONINTERACTIVE=true install-script-dependencies \"cla -r /var/lib/myfrdcsa/codebases/minor/action-planner/OConnor.pdf -W\""
-
-echo "Finished FRDCSA Install"
