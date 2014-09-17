@@ -390,6 +390,9 @@ fi
 
 # /etc/init.d/unilang restart
 
+echo "Finishing for now."
+exit 1
+
 echo "STARTING INSTALLATION OF UNILANG: PROCESS IS CONFUSING, PLEASE WAIT UP TO 15 MINUTES FOR IT TO COMPLETE (until you see 'INSTALLATION OF UNILANG COMPLETE')"
 
 echo "Stopping UniLang in case it was already running from a previous run of the provisioning script"
@@ -422,11 +425,15 @@ if ! /var/lib/myfrdcsa/codebases/internal/unilang/scripts/check-if-unilang-is-ru
     # echo '/etc/init.d/unilang stop; killall start unilang unilang-client' | at now + 2 minutes
 
     echo "Setting timed stopper, duration $UNILANG_INSTALL_SLEEP_DURATION"
-    system "/var/lib/myfrdcsa/codebases/internal/unilang/scripts/install-helper.pl -d $UNILANG_INSTALL_SLEEP_DURATION"
+    /var/lib/myfrdcsa/codebases/internal/unilang/scripts/install-helper.pl -d $UNILANG_INSTALL_SLEEP_DURATION
 
     echo "Trying to launch UniLang to try to get dependencies"
-    while ! NONINTERACTIVE=true /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; do
-	echo "Trying again..."
+    LOOP=true
+    while $LOOP; do
+	echo "Trying..."
+	if NONINTERACTIVE=true /var/lib/myfrdcsa/codebases/internal/myfrdcsa/bin/install-script-dependencies "./start -s -u localhost 9000 -c -W 5000"; then
+	    LOOP=false
+	fi
     done
 
     echo "Ok, UniLang exited successfully, cleaning up"
